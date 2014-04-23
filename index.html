@@ -4,11 +4,11 @@
   <head>
     <meta charset='utf-8' />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="Faisdodo : An IDL implementation of a LAS file manipulator" />
+    <meta name="description" content="Kingcake : An IDL implementation of a LAS file reader/writer" />
 
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
-    <title>Faisdodo</title>
+    <title>Project Kingcake by Carbomap Ltd.</title>
   </head>
 
   <body>
@@ -16,14 +16,14 @@
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
         <header class="inner">
-          <a id="forkme_banner" href="https://github.com/carbomap/faisdodo">View on GitHub</a>
+          <a id="forkme_banner" href="https://github.com/carbomap/kingcake">View on GitHub</a>
 
-          <h1 id="project_title">Faisdodo</h1>
-          <h2 id="project_tagline">An IDL implementation of a LAS file manipulator</h2>
+          <h1 id="project_title">Kingcake</h1>
+          <h2 id="project_tagline">An IDL implementation of a LAS file reader/writer</h2>
 
             <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/carbomap/faisdodo/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/carbomap/faisdodo/tarball/master">Download this project as a tar.gz file</a>
+              <a class="zip_download_link" href="https://github.com/carbomap/kingcake/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/carbomap/kingcake/tarball/master">Download this project as a tar.gz file</a>
             </section>
         </header>
     </div>
@@ -31,44 +31,70 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+  ga('create', 'UA-50184707-1', 'carbomap.github.io');
+  ga('send', 'pageview');
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+</script>
+
+<!--<h2>
+<a name="kingcake" class="anchor" href="#kingcake"><span class="octicon octicon-link"></span></a>What is it?</h2>
+-->
+
+<style type="text/css">
+  p {font-family: 'helvetica';}
+</style>
+
+<p>The laslib class is an IDL implementation of a LAS file reader/writer. The class object can read, write and manipulate points and/or full waveforms contained in the binary LAS file format.</br>
+It can handle any LAS 1.0, 1.1, 1.2, 1.3 with point format 0, 1, 2, 3, 4, 5. </br>
+Handling of LAS 1.4 is under development.</p>
+
+<p>We are well aware that releasing "open source" code in IDL might not sounds as "open” as code in C/C++, but here at Carbomap we use this library every day in processing our workflow, with fast and efficient results in LiDAR data manipulation.</p>
+
+<p>For the C/C++ coders/users, we will be releasing new and exciting tools in the upcoming months.</p>
+
+<p>We hope you'll enjoy it as much as we do every day.</p>
+
+<p>Please let us know if you want or need more features implemented. Also report any bugs or issues at info at carbomap dot com.</p>
+
+<p>As it is an open project, we would like to see you involved, so please don't hesitate to clone and/or fork this project.</p>
+
+<p>Carbomap has a joint expertise of more than ten years in lidar full waveform data processing. This includes bathymetric, topographic, mobile and terrestrical lidar sytems.</p>
+
+<p>If you’re wondering about the name of the release; it celebrates the New Orleans pastry of Mardi Gras :: the King cake.</p>
 
 <h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Install</h3>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p>To install simply import the project into your current IDL workspace. Build the project, and you're ready to go</p>
 
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<p>For more information on how to use the class object, please refer to the wiki pages on the github project <a href="https://github.com/carbomap/kingcake/wiki">page</a></br>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
 
 <h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
-
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
-
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
-
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<a name="credits" class="anchor" href="#credits"><span class="octicon octicon-link"></span></a>Credits</h3>
+<p>Created 02/03/2014 by Antoine Cottin</br>
+Carbomap Ltd.</br>
+7th Floor, Appleton Tower</br>
+11 Crichton Street</br>
+Edinburgh</br>
+EH8 9LE</p>
+<a href="http://www.carbomap.com">http://www.carbomap.com</a></br>
+<a href="http://carbomap.wordpress.com">http://carbomap.wordpress.com</a></br>
+<a href="http://github.com/carbomap">http://github.com/carbomap/</a></p>
       </section>
     </div>
 
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
       <footer class="inner">
-        <p class="copyright">Faisdodo maintained by <a href="https://github.com/carbomap">carbomap</a></p>
+        <p class="copyright">Kingcake maintained by <a href="https://github.com/carbomap">carbomap</a></p>
         <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
