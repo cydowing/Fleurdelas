@@ -254,6 +254,43 @@ form {
   padding: 20px;
 }
 
+#list-nav {
+   float:center;
+   width:640px;
+   overflow:hidden;
+   position:absolute;
+}
+
+ul#list-nav {
+  list-style:none;
+  margin:0px;
+  padding:0;
+  width:640px;
+}
+
+ul#list-nav li {
+  display:inline;
+}
+
+ul#list-nav li a {
+  text-decoration:none;
+  padding:5px 0;
+  width:100px;
+  background: #477C4F;
+  color:#FFFFFF;
+  float:left;
+  text-align:center;
+  border-left:0px solid #fff;
+}
+
+ul#list-nav li a:hover {
+  background: #80A556;
+  color:#FFFFFF
+}
+
+
+
+
 /*******************************************************************************
 Full-Width Styles
 *******************************************************************************/
@@ -268,6 +305,14 @@ Full-Width Styles
   padding: 20px 10px;
   margin: 0 auto;
 }
+
+.nav{
+  position: relative;
+  max-width: 640px;
+  padding: 0px 0px;
+  margin: 0 auto;
+}
+
 
 #forkme_banner {
   display: block;
@@ -285,7 +330,7 @@ Full-Width Styles
 }
 
 #header_wrap {
-  background: #477C4F; /*#212121;*/
+  background: #212121;
   background: -moz-linear-gradient(top, #373737, #212121);
   background: -webkit-linear-gradient(top, #373737, #212121);
   background: -ms-linear-gradient(top, #373737, #212121);
