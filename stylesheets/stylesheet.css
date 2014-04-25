@@ -411,6 +411,12 @@ Full-Width Styles
   background: #212121;
 }
 
+a.top {
+  color: #477C4F ;
+  font-size: 14px;
+  font-weight: 300;
+  float: right;
+}
 
 
 /*******************************************************************************
