@@ -4078,8 +4078,25 @@ Function laslib::getLASHeaderDataStr, inputLun, minorVersion, majorVersion, head
   InitHeaderLAS, header, minorVersion
   self.out->print,1, "Reading header..."
   readu, inputLun, header
-  self.out->print,1, strcompress("File contains " + string(header.nPoints) + " points.")
-  self.out->print,1, strcompress("Point data format: " + string(fix(header.pointFormat)))
+  
+    self.Out->print,1,'=============== HEADER ==============='
+  self.Out->print,1, Strcompress("System identifier: " + String(header.Systemid))
+  self.Out->print,1, Strcompress("Generating software: " + String(header.Softwareid))
+  self.Out->print,1, Strcompress("Day/Year of file creation: " + String(Fix(header.Day)) + "/" + Strcompress(String(Fix(header.Year)), /REMOVE_ALL) ) 
+  self.Out->print,1, Strcompress("Header size: " + String(Fix(header.Headersize)))
+  self.Out->print,1, Strcompress("Byte offset to data block: " + String(header.Dataoffset))
+  self.Out->print,1, Strcompress("File contains " + String(header.Npoints) + " points.")
+  self.Out->print,1, Strcompress("Point format: " + String(Fix(header.Pointformat)))
+  self.Out->print,1, Strcompress("Point size: " + String(header.Pointlength) + " bytes.")
+  self.Out->print,1, Strcompress("Number of Variable Length Records: " + String(Fix(header.Nrecords)))
+  self.Out->print,1, Strcompress("Number of points per return: ")
+  self.Out->printArray,1, Strcompress(String(header.Nreturns), /REMOVE_ALL)
+  self.Out->print,1, Strcompress("Scale factor x y z: " + String(header.Xscale) + " " + String(header.Yscale) + " " + String(header.Zscale))
+  self.Out->print,1, Strcompress("Offset factor: " + String(header.Xoffset) + " " + String(header.Yoffset) + " " + String(header.Zoffset))
+  self.Out->print,1, Strcompress("Minimum x y z: " + String(header.Xmin) + " " + String(header.Ymin) + " " + String(header.Zmin))
+  self.Out->print,1, Strcompress("Maximum x y z: " + String(header.Xmax) + " " + String(header.Ymax) + " " + String(header.Zmax))
+  self.Out->print,1,'======================================'
+
   self.out->print,1, "Initializing the point structure..."
   InitDataLAS, dataStr,  pointFormat = header.pointFormat
   self.out->print,1, "Original point Structure description:"
@@ -4182,7 +4199,8 @@ end
 
 ;+
 ; 
-;-;+
+;-
+;+
 ; :Description:
 ;    This Function aim to modify the GeoKey record of the VLR record
 ;    Still in beta - WIP
