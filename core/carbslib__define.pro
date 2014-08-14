@@ -12,13 +12,13 @@
 ;   surveyDay=survey day
 ;       
 ; :Uses:
-;   lasObj=Obj_New("lasLib")
+;   lasObj=Obj_New("carbslib")
 ;
 ; :Examples:
 ;
 ;   Init the object
 ;     
-;     lasObj = obj_new('laslib')
+;     lasObj = obj_new('carbslib')
 ;     
 ;   Load a LAS file into the Object:
 ;   
@@ -44,51 +44,51 @@
 ;     -Add getter and setter for Vlr and EVlr
 ;     
 ;    January 2012
-;     -Implementation of laslib::writeLAS
+;     -Implementation of carbslib::writeLAS
 ;      Still in beta      
 ;     
 ;    September 2013
 ;     -Add comments and header comments
 ;     
 ;    14 September 2013
-;     -Change laslib::getData(pointNumber=index) : 
+;     -Change carbslib::getData(pointNumber=index) : 
 ;      using the index array as one block instead of loop on the block
 ;      and trying to locate the exact record.
 ;    
 ;    January 2014:
-;     -laslib::tileData :
+;     -carbslib::tileData :
 ;      Binary file structure modify, two new fields to the header
-;      two new methods have been added, laslib::readTile() and laslib::writeTile() which
+;      two new methods have been added, carbslib::readTile() and carbslib::writeTile() which
 ;      superseed the old method 
-;     -laslib::dump :
+;     -carbslib::dump :
 ;      Implementation of an ASCII dump method
-;     -laslib::restoreData :
+;     -carbslib::restoreData :
 ;      Restore the original data from the load method (not sure this is really useful)
-;     -laslib:radiusSelection :
+;     -carbslib:radiusSelection :
 ;      selection of points within a circle
-;     -laslib::polygonSelection :
+;     -carbslib::polygonSelection :
 ;      Selection of points inside a polygon
-;     -laslib::extractTrees :
+;     -carbslib::extractTrees :
 ;      A working prototype method that extracts trees directly from the point cloud.
 ;      It uses a recursive approach
 ;       
 ;    25 February 2014
 ;     -Improvment of version handling :
 ;      There was an issue in the header handling through the version in the number of point by returns    
-;     -laslib::writeLAS :
+;     -carbslib::writeLAS :
 ;      using the index array as one block instead of loop on the block
 ;      and trying to locate the exact record.
 ;     -Removing all data members and associate methods referencing to the old writeLAS method
-;     -Integration of laslib::readVLR
-;     -Integration of laslib::readLAS
-;     -Integration of laslib::addGeoKey - WIP
-;     -Improvement of laslib::cleanup
+;     -Integration of carbslib::readVLR
+;     -Integration of carbslib::readLAS
+;     -Integration of carbslib::addGeoKey - WIP
+;     -Improvement of carbslib::cleanup
 ;        
 ;-
-Pro lasLib__define
+Pro carbslib__define
 
 ; Definition of the data hold by the object
-void = {lasLib, $
+void = {carbslib, $
   lasFilePath       : '',$                    ; String representing the path to the LAS file
   surveyDay         : '',$                    ; String holding the Julian Survey day - only with ARSF-NERC dataset
   tempDirPath       : '',$                    ; String holding the temporary directory path to store temp file(s) if required
@@ -138,7 +138,7 @@ End
 ;   
 ; :Examples:
 ;     setup the object
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;     load a LAS file
 ;       lasObj->loadDataWithPath, '/path/to/the/file.LAS'
 ;
@@ -154,7 +154,7 @@ End
 ; :Author:
 ;   Antoine Cottin
 ;-
-Pro lasLib::loadDataWithPath, inputFile=inputFile, _ref_extra=logMode
+Pro carbslib::loadDataWithPath, inputFile=inputFile, _ref_extra=logMode
 
   ; Initializing console printing
   self.out = obj_new('consoleOutput', _extra = logMode)
@@ -162,8 +162,8 @@ Pro lasLib::loadDataWithPath, inputFile=inputFile, _ref_extra=logMode
 
   ; Setting up a temp directory to hold temporary informations
   ; cd into the project directory
-  laslibPath = FILE_DIRNAME(ROUTINE_FILEPATH())
-  CD, laslibPath
+  carbslibPath = FILE_DIRNAME(ROUTINE_FILEPATH())
+  CD, carbslibPath
   CD, '../'
   spawn, 'pwd', rootPth
   self.rootPath = rootPth
@@ -250,7 +250,7 @@ End
 ;
 ; :Author: antoine
 ;-
-Function laslib::restoreData
+Function carbslib::restoreData
 
   dum = self.getData(pointNumber = (*self.lasDataIndBackup))
   return, 1
@@ -289,7 +289,7 @@ End
 ;
 ; :Author: antoine
 ;-
-Function laslib::lookingForFile, basename, ext, tileFileName
+Function carbslib::lookingForFile, basename, ext, tileFileName
 
   if strlowcase(!version.OS_NAME) eq "linux" or strlowcase(!version.OS_NAME) eq "mac os x" then spath='/' else spath='\'
   sep=strcompress(strmid(spath, 0, 1,/reverse_offset))
@@ -305,7 +305,7 @@ End
 
 
 
-Function lasLib::readTile, outFile=outFile
+Function carbslib::readTile, outFile=outFile
 
   ; start time
   T = SYSTIME(1)
@@ -408,7 +408,7 @@ End
 ; :Author:
 ;   Antoine Cottin
 ;-
-Function laslib::writeTile, outFile=outFile
+Function carbslib::writeTile, outFile=outFile
 
   T = SYSTIME(1)
   
@@ -472,7 +472,7 @@ End
 ; If the file is found it is read and assign to the object.
 ; If the file is not found, it will create it and assign it to the object.
 ; For now the tile size (100 m x 100 m is hard coded but is meant to be change in the future.
-; To get the tile index, use the method laslib::getTileIndex().
+; To get the tile index, use the method carbslib::getTileIndex().
 ;
 ; :Categories:
 ;   GENERAL
@@ -487,7 +487,7 @@ End
 ;   For Example::
 ;
 ;     setup the object
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;
 ;     load the 5th flightline of survey from December 5th 2003
 ;       lasObj->tileData
@@ -526,7 +526,7 @@ End
 ;
 ; :Author: antoine
 ;-
-Pro lasLib::tileData, xTile, yTile, box, outFile = outFile
+Pro carbslib::tileData, xTile, yTile, box, outFile = outFile
 
 ; start time
 T = SYSTIME(1)
@@ -704,13 +704,13 @@ End
 ;   For Example::
 ;
 ;     setup the object
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;
 ;     Call for help on the object
 ;       lasObj->help
 ;
 ;-
-Pro lasLib::help
+Pro carbslib::help
 
   help, self, /objects
   return
@@ -733,18 +733,18 @@ End
 ;
 ; :Examples:
 ;     setup the object
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;
 ;     Destroying the object
 ;       obj_destroy, lasObj
 ;       
 ;-
-Pro lasLib::cleanup
+Pro carbslib::cleanup
 
   Compile_opt idl2
    
   ; Removing the temporary files
-  self.out->print,1 , 'Destroying laslib object...'
+  self.out->print,1 , 'Destroying carbslib object...'
   self.out->print,1 , 'Removing temporary files...'
   CD, '~/IDLWorkspace83/Saints/'
   ; Removing a temp file
@@ -783,7 +783,7 @@ End
 ; :Hidden:
 ;
 ;-
-Pro lasLib::testArg, boundingBox=b, pointNumber=v, all=all
+Pro carbslib::testArg, boundingBox=b, pointNumber=v, all=all
  
 if arg_present(boundingBox) then print, "boundingBox argument present"
 if n_elements(b) ne 0 then print, b 
@@ -839,7 +839,7 @@ End
 ;         fileNameSearch: is the root name of the selected data type
 ;
 ;-
-Function laslib::projectPathBuilder,_ref_extra=pathType,day=surveyDay
+Function carbslib::projectPathBuilder,_ref_extra=pathType,day=surveyDay
 
   Compile_opt idl2
   
@@ -986,7 +986,7 @@ End
 ;
 ; :Hidden:
 ;-
-Pro lasLib::loadWave
+Pro carbslib::loadWave
 
 ; Check if the waveforms are inside the LAS file if not find the wave file and open it
  
@@ -1024,7 +1024,7 @@ End
 
 
 ;+
-; Init the laslib Object.
+; Init the carbslib Object.
 ;
 ; :Categories:
 ;   GENERAL
@@ -1033,16 +1033,16 @@ End
 ;   an object
 ;
 ; :Uses:
-;   Obj = obj_new('laslib')
+;   Obj = obj_new('carbslib')
 ;
 ; :Examples:
 ;   For Example::
 ;
 ;     Setup the object:
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;
 ;-
-Function lasLib::init
+Function carbslib::init
 
   Compile_opt idl2
   
@@ -1073,7 +1073,7 @@ End
 ;   For Example::
 ;
 ;     Setup the object:
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;       
 ;     Load a LAS file:
 ;       lasObj->loadDataWithPath, '/path/to/the/file.LAS'
@@ -1093,7 +1093,7 @@ End
 ;     If not string array is present, then all the fields are return.
 ;   
 ;-
-Function laslib::lasPointFieldSelector, tempData, _ref_extra=ex, out
+Function carbslib::lasPointFieldSelector, tempData, _ref_extra=ex, out
 
 ;if n_elements(ex) eq 0 then keyList = strlowcase(tag_names(tempData)) else keyList = strlowcase(ex)
 ;tagList = strlowcase(tag_names(tempData))
@@ -1157,7 +1157,7 @@ End
 ;   For Example::
 ;
 ;     Setup the object:
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;       
 ;     Get the number of flightline(s) for the flight on December 5th 2003: 
 ;       Result=Obj->getNumberOfFlightline(day=338)
@@ -1167,7 +1167,7 @@ End
 ;     Julian day of the survey
 ;
 ;-
-Function lasLib::getNumberOfFlightline, day=surveyDay
+Function carbslib::getNumberOfFlightline, day=surveyDay
 
   Compile_opt idl2
   
@@ -1197,7 +1197,7 @@ End
 ;   For Example::
 ;
 ;     Setup the object:
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003:
 ;       lasObj->loadData, day = '338', flightline = 5
@@ -1206,7 +1206,7 @@ End
 ;       Result = lasObj->getLoadFileName()
 ;
 ;-
-Function lasLib::getLoadFileName
+Function carbslib::getLoadFileName
 
   return, self.lasFilePath
 
@@ -1232,7 +1232,7 @@ End
 ;     geoBox = [488401.968647,487901.968647,235421.265389,234921.265386]
 ;     
 ;     Initialize the object
-;     lasObj = obj_new('laslib')
+;     lasObj = obj_new('carbslib')
 ;     
 ;     Load the 5th flightline from December 5th 2003 data 
 ;     lasObj->loadData, day='338', flightline=5, /QUIET
@@ -1264,7 +1264,7 @@ End
 ;     If n=0 then all the fields are return.
 ;
 ;-  
-Function lasLib::getData, boundingBox=b, max=max, min=min, pointNumber=v, all=all, _ref_extra=ex
+Function carbslib::getData, boundingBox=b, max=max, min=min, pointNumber=v, all=all, _ref_extra=ex
 
 ; start time
 T = SYSTIME(1)
@@ -1481,7 +1481,7 @@ End
 ;     geoBox = [488401.968647,487901.968647,235421.265389,234921.265386]
 ;
 ;     Initialize the object
-;     lasObj = obj_new('laslib')
+;     lasObj = obj_new('carbslib')
 ;
 ;     Load the 5th flightline from December 5th 2003 data
 ;     lasObj->loadData, day='338', flightline=5, /QUIET
@@ -1513,7 +1513,7 @@ End
 ;     If n=0 then all the fields are return.
 ;
 ;-
-Function lasLib::getDataFromSelectedData, boundingBox=b, max=max, min=min, pointNumber=v, all=all, _ref_extra=ex
+Function carbslib::getDataFromSelectedData, boundingBox=b, max=max, min=min, pointNumber=v, all=all, _ref_extra=ex
 
   ; start time
   T = SYSTIME(1)
@@ -1725,14 +1725,14 @@ End
 ;   For Example::
 ;
 ;     Setup the object:
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;       lasObj->loadData, inputFile = /Path/to/las/file
 ;       
 ;     Get the start & end time of the flightline:
 ;       Result = lasObj->getDataTime()
 ;
 ;-
-Function lasLib::getDataTime
+Function carbslib::getDataTime
 
     minTime=min(((*self.lasData).time), max=maxTime)
     return, [minTime, maxTime]
@@ -1756,7 +1756,7 @@ End
 ; :Examples:
 ;
 ;     Setup the object:
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003
 ;       lasObj->loadData, day = '338', flightline = 5
@@ -1773,7 +1773,7 @@ End
 ;     If not set, the return is an `array of structure` of the selected points.
 ;     
 ;-
-Function lasLib::getDataFromClass, class=cl, outputId=outputId
+Function carbslib::getDataFromClass, class=cl, outputId=outputId
 
 ; start time
 T = SYSTIME(1)
@@ -1839,7 +1839,7 @@ End
 ; :Examples:
 ;
 ;     Setup the object:
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003
 ;       lasObj->loadData, day = '338', flightline = 5
@@ -1856,7 +1856,7 @@ End
 ;     If not set, the return is an `array of structure` of the selected points.
 ;     
 ;-
-Function lasLib::getSelectedDataByClass, class=cl, outputId=outputId
+Function carbslib::getSelectedDataByClass, class=cl, outputId=outputId
 
   ; start time
   T = SYSTIME(1)
@@ -1928,7 +1928,7 @@ End
 ; :Examples:
 ;
 ;     Setup the object:
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003
 ;       lasObj->loadData, day = '338', flightline = 5
@@ -1945,7 +1945,7 @@ End
 ;     If not set, the return is an `array of structure` of the selected points.
 ;
 ;-
-Function lasLib::getSelectedDataByReturnNumber, return_number=rtnb, outputId=outputId
+Function carbslib::getSelectedDataByReturnNumber, return_number=rtnb, outputId=outputId
 
   ; start time
   T = SYSTIME(1)
@@ -2015,7 +2015,7 @@ End
 ; :Examples:
 ;
 ;     Setup the object:
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003
 ;       lasObj->loadData, day = '338', flightline = 5
@@ -2032,7 +2032,7 @@ End
 ;     If not set, the return is an `array of structure` of the selected points.
 ;
 ;-
-Function lasLib::getDataFromReturnNumber, return_number=rtnb, outputId=outputId
+Function carbslib::getDataFromReturnNumber, return_number=rtnb, outputId=outputId
 
   ; start time
   T = SYSTIME(1)
@@ -2097,7 +2097,7 @@ End
 ; :Examples:
 ;
 ;     Setup the object:
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003
 ;       lasObj->loadData, day = '338', flightline = 5
@@ -2114,7 +2114,7 @@ End
 ;     If not set, the return is an `array of structure` of the selected points.
 ;
 ;-
-Function lasLib::getSelectedDataByNumberOfReturns, return_number=rtnb, outputId=outputId
+Function carbslib::getSelectedDataByNumberOfReturns, return_number=rtnb, outputId=outputId
 
   ; start time
   T = SYSTIME(1)
@@ -2170,7 +2170,7 @@ End
 
 
 
-Function lasLib::removeOffPoints, tileID, outputId=outputId
+Function carbslib::removeOffPoints, tileID, outputId=outputId
 
   ; start time
   T = SYSTIME(1)
@@ -2232,7 +2232,7 @@ End
 ; :Examples:
 ;
 ;     Setup the object:
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;       lasObj->loadData, inputFile = /Path/to/las/file
 ;
 ;     Get all the points corresponding to second return:
@@ -2247,7 +2247,7 @@ End
 ;     If not set, the return is an `array of structure` of the selected points.
 ;
 ;-
-Function lasLib::getDataFromNumberOfReturns, return_number=rtnb, outputId=outputId
+Function carbslib::getDataFromNumberOfReturns, return_number=rtnb, outputId=outputId
 
   ; start time
   T = SYSTIME(1)
@@ -2315,7 +2315,7 @@ End
 ;
 ;     Setup the object:
 ;     
-;       lasObj = obj_new('laslib')
+;       lasObj = obj_new('carbslib')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003:
 ;       
@@ -2334,14 +2334,14 @@ End
 ;     If set, returns all the waveforms of the file as an `intarr(n,m)` where
 ;     n is the number of samples per waveform and m is the number of waveform(s) returned.
 ;   loadedPoints : in, optional, type=boolean
-;     If set, returns the waveforms associate to the points loaded in memory during the last call of laslib::getData() method.
+;     If set, returns the waveforms associate to the points loaded in memory during the last call of carbslib::getData() method.
 ;     It will return a `intarr(n,m)` where n is the number of samples per waveform and m is the number of waveform(s) returned.
 ;   electric: in, optional, type=boolean
 ;     If set, the return waveform are converted to voltage value as recorded by the system. 
 ;     It will return a `dblarr(n,m)` where n is the number of samples per waveform and m is the number of waveform(s) returned.
 ;
 ;-
-Function lasLib::getWave, all=all, loadedPoints=loadedPoints, electric=electric
+Function carbslib::getWave, all=all, loadedPoints=loadedPoints, electric=electric
 
 ;TODO: Check if the waveforms are inside the LAS file if not find the wave file and open it
 if (*(self.lasHeader)).versionMinor le 2 then begin
@@ -2481,7 +2481,7 @@ End
 ;
 ;
 ;-
-Function lasLib::getTileIndex, index
+Function carbslib::getTileIndex, index
 
   if n_elements(index) ne 0 then begin
     
@@ -2511,7 +2511,7 @@ End
 ;   Result=Obj->getSelectedDataIndex()
 ;
 ;-
-Function lasLib::getSelectedDataIndex
+Function carbslib::getSelectedDataIndex
 
   if ptr_valid(self.getDataIndex) then return, (*(self.getDataIndex)) else print, 'Nothing to return, please update the selection first...'
 
@@ -2614,7 +2614,7 @@ End
 ;     If set, will return the bounding box of the LAS file.
 ;     The result will be a `dblarr(4)` of [XMAX,XMIN,YMAX,YMIN,ZMAX,ZMIN].
 ;-
-Function lasLib::getHeaderProperty,$
+Function carbslib::getHeaderProperty,$
   header=header,$
   signature=signature,$
   versionMajor=versionMajor,$
@@ -2677,7 +2677,7 @@ End
 
 
 
-Function lasLib::getVlr,$
+Function carbslib::getVlr,$
   waveDescriptorHeader=waveDescriptorHeader,$
   waveDescriptorArray=waveDescriptorArray,$
   geoTiff=geoTiff,$
@@ -2737,7 +2737,7 @@ End
 ;         }
 ;         
 ;-
-Function lasLib::getEVlr,$
+Function carbslib::getEVlr,$
   header=header
   
 if keyword_set(header) then return, (*(self.lasWaveEvlrHeader))  
@@ -2760,7 +2760,7 @@ End
 ;   Result=Obj->getPointSize()
 ;
 ;-
-Function lasLib::getPointSize
+Function carbslib::getPointSize
  
 return, self.lasDataStrSz  
   
@@ -2784,7 +2784,7 @@ End
 ;   Result=Obj->setHeader(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeader, temp
+Function carbslib::setHeader, temp
 (*(self.lasHeader))=temp
 End
 
@@ -2806,7 +2806,7 @@ End
 ;   Result=Obj->setHeaderSignature(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderSignature, temp
+Function carbslib::setHeaderSignature, temp
 (*(self.lasHeader)).signature = temp
 End
 
@@ -2828,7 +2828,7 @@ End
 ;   Result=Obj->setHeaderVersionMajor(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderVersionMajor, temp
+Function carbslib::setHeaderVersionMajor, temp
 (*(self.lasHeader)).versionMajor = temp
 End
 
@@ -2850,7 +2850,7 @@ End
 ;   Result=Obj->setHeaderVersionMinor(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderVersionMinor, temp
+Function carbslib::setHeaderVersionMinor, temp
 (*(self.lasHeader)).versionMinor = temp
 End  
 
@@ -2872,7 +2872,7 @@ End
 ;   Result=Obj->setHeaderSystemID(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderSystemID, temp
+Function carbslib::setHeaderSystemID, temp
 
   dum = ((*(self.lasHeader)).systemID)
   dum[0] = temp
@@ -2898,7 +2898,7 @@ End
 ;   Result=Obj->setHeaderSoftwareID(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderSoftwareID, temp
+Function carbslib::setHeaderSoftwareID, temp
  
   dum = ((*(self.lasHeader)).softwareID)
   dum[0] = temp
@@ -2924,7 +2924,7 @@ End
 ;   Result=Obj->setHeaderDay(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderDay, temp
+Function carbslib::setHeaderDay, temp
 (*(self.lasHeader)).day = temp
 End
 
@@ -2946,7 +2946,7 @@ End
 ;   Result=Obj->setHeaderYear(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderYear, temp
+Function carbslib::setHeaderYear, temp
 (*(self.lasHeader)).year = temp
 End
 
@@ -2968,7 +2968,7 @@ End
 ;   Result=Obj->setHeaderDataOffset(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderDataOffset, temp
+Function carbslib::setHeaderDataOffset, temp
 (*(self.lasHeader)).dataOffset = temp
 End
 
@@ -2990,7 +2990,7 @@ End
 ;   Result=Obj->setHeaderNRecords(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderNRecords, temp
+Function carbslib::setHeaderNRecords, temp
 (*(self.lasHeader)).nRecords = temp
 End
 
@@ -3012,7 +3012,7 @@ End
 ;   Result=Obj->setHeaderPointFormat(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderPointFormat, temp
+Function carbslib::setHeaderPointFormat, temp
 (*(self.lasHeader)).pointFormat = temp
 End
 
@@ -3034,7 +3034,7 @@ End
 ;   Result=Obj->setHeaderPointLength(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderPointLength, temp
+Function carbslib::setHeaderPointLength, temp
 (*(self.lasHeader)).pointLength = temp
 End
 
@@ -3056,7 +3056,7 @@ End
 ;   Result=Obj->setHeaderNPoints(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderNPoints, temp
+Function carbslib::setHeaderNPoints, temp
 (*(self.lasHeader)).nPoints = temp
 End
 
@@ -3078,7 +3078,7 @@ End
 ;   Result=Obj->setHeaderNReturns(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderNReturns, temp
+Function carbslib::setHeaderNReturns, temp
 (*(self.lasHeader)).nReturns = temp
 End
 
@@ -3100,7 +3100,7 @@ End
 ;   Result=Obj->setHeaderXScale(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderXScale, temp
+Function carbslib::setHeaderXScale, temp
 (*(self.lasHeader)).xScale = temp
 End
 
@@ -3122,7 +3122,7 @@ End
 ;   Result=Obj->setHeaderYScale(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderYScale, temp
+Function carbslib::setHeaderYScale, temp
 (*(self.lasHeader)).yScale = temp
 End
 
@@ -3144,7 +3144,7 @@ End
 ;   Result=Obj->setHeaderZScale(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderZScale, temp
+Function carbslib::setHeaderZScale, temp
 (*(self.lasHeader)).zScale = temp
 End
 
@@ -3166,7 +3166,7 @@ End
 ;   Result=Obj->setHeaderXOffset(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderXOffset, temp
+Function carbslib::setHeaderXOffset, temp
 (*(self.lasHeader)).xOffset = temp
 End
 
@@ -3188,7 +3188,7 @@ End
 ;   Result=Obj->setHeaderYOffset(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderYOffset, temp
+Function carbslib::setHeaderYOffset, temp
 (*(self.lasHeader)).yOffset = temp
 End
 
@@ -3210,7 +3210,7 @@ End
 ;   Result=Obj->setHeaderZOffset(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderZOffset, temp
+Function carbslib::setHeaderZOffset, temp
 (*(self.lasHeader)).zOffset = temp
 End
 
@@ -3232,7 +3232,7 @@ End
 ;   Result=Obj->setHeaderXMax(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderXMax, temp
+Function carbslib::setHeaderXMax, temp
 (*(self.lasHeader)).xMax = temp
 End
 
@@ -3254,7 +3254,7 @@ End
 ;   Result=Obj->setHeaderYMax(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderYMax, temp
+Function carbslib::setHeaderYMax, temp
 (*(self.lasHeader)).yMax = temp
 End
 
@@ -3276,7 +3276,7 @@ End
 ;   Result=Obj->setHeaderZMax(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderZMax, temp
+Function carbslib::setHeaderZMax, temp
 (*(self.lasHeader)).zMax = temp
 End
 
@@ -3298,7 +3298,7 @@ End
 ;   Result=Obj->setHeaderXMin(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderXMin, temp
+Function carbslib::setHeaderXMin, temp
 (*(self.lasHeader)).xMin = temp
 End
 
@@ -3320,7 +3320,7 @@ End
 ;   Result=Obj->setHeaderYMin(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderYMin, temp
+Function carbslib::setHeaderYMin, temp
 (*(self.lasHeader)).yMin = temp
 End
 
@@ -3342,7 +3342,7 @@ End
 ;   Result=Obj->setHeaderZMin(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderZMin, temp
+Function carbslib::setHeaderZMin, temp
 (*(self.lasHeader)).zMin = temp
 End
 
@@ -3363,7 +3363,7 @@ End
 ;   Result=Obj->setHeader(temp=tempvalue)
 ;
 ;-
-Function lasLib::setHeaderStartWaveform, temp
+Function carbslib::setHeaderStartWaveform, temp
 (*(self.lasHeader)).startWaveform = temp
 End
 
@@ -3395,7 +3395,7 @@ End
 ;   Result=Obj->setVlrWaveDescriptorHeader(temp=tempvalue)
 ;
 ;-
-Function lasLib::setVlrWaveDescriptorHeader, temp
+Function carbslib::setVlrWaveDescriptorHeader, temp
 ;(*(self.lasHeader)).lasWaveDsptrHdr = temp
 (*(self.lasWaveDsptrHdr)) = temp
 End
@@ -3428,7 +3428,7 @@ End
 ;   Result=Obj->setVlrWaveDescriptorArray(temp=tempvalue)
 ;
 ;-
-Function lasLib::setVlrWaveDescriptorArray, temp
+Function carbslib::setVlrWaveDescriptorArray, temp
 ;(*(self.lasHeader)).lasWaveDsptr = temp
 (*(self.lasWaveDsptr)) = temp
 End
@@ -3452,7 +3452,7 @@ End
 ;     A binary structure of the EVLR.
 ;
 ;-
-Function lasLib::setEVlr, temp
+Function carbslib::setEVlr, temp
 (*(self.lasWaveEvlrHeader)) = temp  
 End
 
@@ -3473,7 +3473,7 @@ End
 ;   February 2014 - Fully functional
 ;
 ;-
-Pro lasLib::writeLAS, outFile
+Pro carbslib::writeLAS, outFile
 
 openw, 1, outFile
 
@@ -3481,11 +3481,11 @@ self.out->print, 1, "Writing the new file on the disk at " + strcompress(string(
 
 ; Defining System ID
 sysID = bytarr(32)
-sysID[0] = byte('LASLib by Carbomap Ltd')
+sysID[0] = byte('carbslib by Carbomap Ltd')
 dum = self.setHeaderSystemID(sysID)
 ; Defining Software ID
 softID = Bytarr(32)
-softID[0] = Byte('LASLib::writeLAS')
+softID[0] = Byte('carbslib::writeLAS')
 dum = self.setHeaderSoftwareID(softID)
 
 lasHeader = self->getHeaderProperty(/header)
@@ -3597,7 +3597,7 @@ End
 
 
 
-Function laslib::getSelectedDataMaximumHeight, outputId=outputId
+Function carbslib::getSelectedDataMaximumHeight, outputId=outputId
 
 ;print, (*(self.lasHeader)).zscale , (*(self.lasHeader)).zoffset
   maxH = max( ((*self.lasData).elev * 0.001) + 0., maxSub )
@@ -3616,7 +3616,7 @@ End
 
 
 
-Function laslib::getSelectedDataRandom, seed, n, outputId=outputId
+Function carbslib::getSelectedDataRandom, seed, n, outputId=outputId
 
   dum = n_elements(self.getSelectedDataIndex())
   rNumb = randomu(seed, n)
@@ -3666,7 +3666,7 @@ End
 ;
 ; :Author: antoine
 ;-
-Function laslib::dump, val, outputPath=outputPath
+Function carbslib::dump, val, outputPath=outputPath
 
   x = ((*self.lasData).east * (*(self.lasHeader)).xscale) + (*(self.lasHeader)).xoffset
   y = ((*self.lasData).north * (*(self.lasHeader)).yscale) + (*(self.lasHeader)).yoffset
@@ -3711,7 +3711,7 @@ End
 
 
 
-Function laslib::getScaledCoordinates
+Function carbslib::getScaledCoordinates
 
   return, [ $
           [ ((*self.lasData).east * (*(self.lasHeader)).xscale) + (*(self.lasHeader)).xoffset ] ,$
@@ -3723,7 +3723,7 @@ End
 
 
 
-Function laslib::updateSelectArray, index
+Function carbslib::updateSelectArray, index
 
     (*self.selectArray)[index] += 1
     return, 1
@@ -3732,7 +3732,7 @@ End
 
 
 
-Function laslib::resetselectArray
+Function carbslib::resetselectArray
 
     (*self.selectArray) *= 0
     return, 1
@@ -3741,7 +3741,7 @@ End
 
 
 
-Function laslib::radiusSelection, center, radius, indexPoints
+Function carbslib::radiusSelection, center, radius, indexPoints
 
   ; Restoring data into memory
   ;dum = self.restoreData()
@@ -3798,7 +3798,7 @@ Function laslib::radiusSelection, center, radius, indexPoints
 End
 
 
-Function laslib::polygonSelection, boundPoints, indexPoints
+Function carbslib::polygonSelection, boundPoints, indexPoints
 
   ; Restoring data into memory
   ;dum = self.restoreData()
@@ -3884,14 +3884,14 @@ End
 ; :Author:
 ;   Antoine Cottin
 ;-
-Function laslib::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlrId ,vlrArr, obj
+Function carbslib::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlrId ,vlrArr, obj
 
   ; Creating a binary file that will hold the VLR Records
   ;CD, '~/IDLWorkspace83/Saints/'
   close, 2
 
   ; Creating a temp file that hold ALL the VLR records
-  ; XXX: will need to be changed we integrated to laslib using self.tempDirPath
+  ; XXX: will need to be changed we integrated to carbslib using self.tempDirPath
   openw, 2, './temp/vlrRecords.bin'
 
   ; Closing all lun(s) to avoid any issue
@@ -4037,7 +4037,7 @@ End
 
 ;+
 ;   The purpose of this method is the read the LAS file.
-;   This method is automatically called when the laslib::loadData() is invoque.
+;   This method is automatically called when the carbslib::loadData() is invoque.
 ;
 ; :Category:
 ; 	LAS
@@ -4064,14 +4064,14 @@ End
 ;   Create by Antoine Cottin, Jully 2012.
 ;   February 2014 :
 ;     -Remodeling of the whole procedure for better results
-;     -Integration to the laslib object
+;     -Integration to the carbslib object
 ;
 ; :Author:
 ;   Antoine Cottin
 ;   
 ; :Hidden:
 ;-
-Function laslib::getLASHeaderDataStr, inputLun, minorVersion, majorVersion, header, dataStr
+Function carbslib::getLASHeaderDataStr, inputLun, minorVersion, majorVersion, header, dataStr
 
   self.out->print,1,strcompress("LAS Version " + string(fix(majorVersion)) + "." + strcompress(string(fix(minorVersion)),/remove_all) + " detected.")
   self.out->print,1, "Initializing the header..."
@@ -4111,7 +4111,7 @@ End
 ;
 ;+
 ;   The purpose of this method is the read the LAS file.
-;   This method is automatically called when the laslib::loadData() is invoque.
+;   This method is automatically called when the carbslib::loadData() is invoque.
 ;
 ; :Category:
 ; 	LAS
@@ -4134,14 +4134,14 @@ End
 ;   Create by Antoine Cottin, Jully 2012.
 ;   February 2014 :
 ;     -Remodeling of the whole procedure for better results
-;     -Integration to the laslib object
+;     -Integration to the carbslib object
 ;
 ; :Author:
 ;   Antoine Cottin
 ;
 ; :Hidden:
 ;-
-Function laslib::readLAS, inputFile, header, dataStr
+Function carbslib::readLAS, inputFile, header, dataStr
 
   compile_opt idl2, logical_predicate
 
@@ -4227,11 +4227,11 @@ end
 ; :Author: antoine
 ;-
 
-Function laslib::addGeoKey
+Function carbslib::addGeoKey
 
 
   out = obj_new('consoleOutput')
-  ;a = obj_new('lasLib')
+  ;a = obj_new('carbslib')
   ;a->load_data, "I:\RG12_10-206b-FW-lidar-20121217\fw_laser\las1.3\LDR-FW-RG12_10-2012-206b-03.LAS"
   vlrGeoKeyArray=a->getvlr(/vlrGeoKeyArray)
 
