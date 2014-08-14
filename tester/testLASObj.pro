@@ -20,8 +20,8 @@
 ;-
 Pro testLASObj
 
-; Initialization of the laslib object 
-lasobj = obj_new('laslib')
+; Initialization of the carbslib object 
+lasobj = obj_new('carbslib')
 
 ; Loading the data from the MiltonKeynes.las file
 ; The input file can be a relative path to the IDL root path, or a fully qualified path
