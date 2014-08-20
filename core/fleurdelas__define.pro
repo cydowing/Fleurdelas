@@ -12,13 +12,13 @@
 ;   surveyDay=survey day
 ;       
 ; :Uses:
-;   lasObj=Obj_New("carbslib")
+;   lasObj=Obj_New("fleurDeLas")
 ;
 ; :Examples:
 ;
 ;   Init the object
 ;     
-;     lasObj = obj_new('carbslib')
+;     lasObj = obj_new('fleurDeLas')
 ;     
 ;   Load a LAS file into the Object:
 ;   
@@ -44,51 +44,53 @@
 ;     -Add getter and setter for Vlr and EVlr
 ;     
 ;    January 2012
-;     -Implementation of carbslib::writeLAS
+;     -Implementation of fleurDeLas::writeLAS
 ;      Still in beta      
 ;     
 ;    September 2013
 ;     -Add comments and header comments
 ;     
 ;    14 September 2013
-;     -Change carbslib::getData(pointNumber=index) : 
+;     -Change fleurDeLas::getData(pointNumber=index) : 
 ;      using the index array as one block instead of loop on the block
 ;      and trying to locate the exact record.
 ;    
 ;    January 2014:
-;     -carbslib::tileData :
+;     -fleurDeLas::tileData :
 ;      Binary file structure modify, two new fields to the header
-;      two new methods have been added, carbslib::readTile() and carbslib::writeTile() which
+;      two new methods have been added, fleurDeLas::readTile() and fleurDeLas::writeTile() which
 ;      superseed the old method 
-;     -carbslib::dump :
+;     -fleurDeLas::dump :
 ;      Implementation of an ASCII dump method
-;     -carbslib::restoreData :
+;     -fleurDeLas::restoreData :
 ;      Restore the original data from the load method (not sure this is really useful)
-;     -carbslib:radiusSelection :
+;     -fleurDeLas:radiusSelection :
 ;      selection of points within a circle
-;     -carbslib::polygonSelection :
+;     -fleurDeLas::polygonSelection :
 ;      Selection of points inside a polygon
-;     -carbslib::extractTrees :
+;     -fleurDeLas::extractTrees :
 ;      A working prototype method that extracts trees directly from the point cloud.
 ;      It uses a recursive approach
 ;       
 ;    25 February 2014
 ;     -Improvment of version handling :
 ;      There was an issue in the header handling through the version in the number of point by returns    
-;     -carbslib::writeLAS :
+;     -fleurDeLas::writeLAS :
 ;      using the index array as one block instead of loop on the block
 ;      and trying to locate the exact record.
 ;     -Removing all data members and associate methods referencing to the old writeLAS method
-;     -Integration of carbslib::readVLR
-;     -Integration of carbslib::readLAS
-;     -Integration of carbslib::addGeoKey - WIP
-;     -Improvement of carbslib::cleanup
-;        
+;     -Integration of fleurDeLas::readVLR
+;     -Integration of fleurDeLas::readLAS
+;     -Integration of fleurDeLas::addGeoKey - WIP
+;     -Improvement of fleurDeLas::cleanup
+;     
+;    20 August 2014
+;     - We changed the name to fleur de las;        
 ;-
-Pro carbslib__define
+Pro fleurDeLas__define
 
 ; Definition of the data hold by the object
-void = {carbslib, $
+void = {fleurDeLas, $
   lasFilePath       : '',$                    ; String representing the path to the LAS file
   surveyDay         : '',$                    ; String holding the Julian Survey day - only with ARSF-NERC dataset
   tempDirPath       : '',$                    ; String holding the temporary directory path to store temp file(s) if required
@@ -138,7 +140,7 @@ End
 ;   
 ; :Examples:
 ;     setup the object
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;     load a LAS file
 ;       lasObj->loadDataWithPath, '/path/to/the/file.LAS'
 ;
@@ -154,7 +156,7 @@ End
 ; :Author:
 ;   Antoine Cottin
 ;-
-Pro carbslib::loadDataWithPath, inputFile=inputFile, _ref_extra=logMode
+Pro fleurDeLas::loadDataWithPath, inputFile=inputFile, _ref_extra=logMode
 
   ; Initializing console printing
   self.out = obj_new('consoleOutput', _extra = logMode)
@@ -162,8 +164,8 @@ Pro carbslib::loadDataWithPath, inputFile=inputFile, _ref_extra=logMode
 
   ; Setting up a temp directory to hold temporary informations
   ; cd into the project directory
-  carbslibPath = FILE_DIRNAME(ROUTINE_FILEPATH())
-  CD, carbslibPath
+  fleurDeLasPath = FILE_DIRNAME(ROUTINE_FILEPATH())
+  CD, fleurDeLasPath
   CD, '../'
   spawn, 'pwd', rootPth
   self.rootPath = rootPth
@@ -250,7 +252,7 @@ End
 ;
 ; :Author: antoine
 ;-
-Function carbslib::restoreData
+Function fleurDeLas::restoreData
 
   dum = self.getData(pointNumber = (*self.lasDataIndBackup))
   return, 1
@@ -289,7 +291,7 @@ End
 ;
 ; :Author: antoine
 ;-
-Function carbslib::lookingForFile, basename, ext, tileFileName
+Function fleurDeLas::lookingForFile, basename, ext, tileFileName
 
   if strlowcase(!version.OS_NAME) eq "linux" or strlowcase(!version.OS_NAME) eq "mac os x" then spath='/' else spath='\'
   sep=strcompress(strmid(spath, 0, 1,/reverse_offset))
@@ -305,7 +307,7 @@ End
 
 
 
-Function carbslib::readTile, outFile=outFile
+Function fleurDeLas::readTile, outFile=outFile
 
   ; start time
   T = SYSTIME(1)
@@ -408,7 +410,7 @@ End
 ; :Author:
 ;   Antoine Cottin
 ;-
-Function carbslib::writeTile, outFile=outFile
+Function fleurDeLas::writeTile, outFile=outFile
 
   T = SYSTIME(1)
   
@@ -472,7 +474,7 @@ End
 ; If the file is found it is read and assign to the object.
 ; If the file is not found, it will create it and assign it to the object.
 ; For now the tile size (100 m x 100 m is hard coded but is meant to be change in the future.
-; To get the tile index, use the method carbslib::getTileIndex().
+; To get the tile index, use the method fleurDeLas::getTileIndex().
 ;
 ; :Categories:
 ;   GENERAL
@@ -487,7 +489,7 @@ End
 ;   For Example::
 ;
 ;     setup the object
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;
 ;     load the 5th flightline of survey from December 5th 2003
 ;       lasObj->tileData
@@ -526,7 +528,7 @@ End
 ;
 ; :Author: antoine
 ;-
-Pro carbslib::tileData, xTile, yTile, box, outFile = outFile
+Pro fleurDeLas::tileData, xTile, yTile, box, outFile = outFile
 
 ; start time
 T = SYSTIME(1)
@@ -704,13 +706,13 @@ End
 ;   For Example::
 ;
 ;     setup the object
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;
 ;     Call for help on the object
 ;       lasObj->help
 ;
 ;-
-Pro carbslib::help
+Pro fleurDeLas::help
 
   help, self, /objects
   return
@@ -733,18 +735,18 @@ End
 ;
 ; :Examples:
 ;     setup the object
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;
 ;     Destroying the object
 ;       obj_destroy, lasObj
 ;       
 ;-
-Pro carbslib::cleanup
+Pro fleurDeLas::cleanup
 
   Compile_opt idl2
    
   ; Removing the temporary files
-  self.out->print,1 , 'Destroying carbslib object...'
+  self.out->print,1 , 'Destroying fleurDeLas object...'
   self.out->print,1 , 'Removing temporary files...'
   CD, '~/IDLWorkspace83/Saints/'
   ; Removing a temp file
@@ -783,7 +785,7 @@ End
 ; :Hidden:
 ;
 ;-
-Pro carbslib::testArg, boundingBox=b, pointNumber=v, all=all
+Pro fleurDeLas::testArg, boundingBox=b, pointNumber=v, all=all
  
 if arg_present(boundingBox) then print, "boundingBox argument present"
 if n_elements(b) ne 0 then print, b 
@@ -839,7 +841,7 @@ End
 ;         fileNameSearch: is the root name of the selected data type
 ;
 ;-
-Function carbslib::projectPathBuilder,_ref_extra=pathType,day=surveyDay
+Function fleurDeLas::projectPathBuilder,_ref_extra=pathType,day=surveyDay
 
   Compile_opt idl2
   
@@ -986,7 +988,7 @@ End
 ;
 ; :Hidden:
 ;-
-Pro carbslib::loadWave
+Pro fleurDeLas::loadWave
 
 ; Check if the waveforms are inside the LAS file if not find the wave file and open it
  
@@ -1024,7 +1026,7 @@ End
 
 
 ;+
-; Init the carbslib Object.
+; Init the fleurDeLas Object.
 ;
 ; :Categories:
 ;   GENERAL
@@ -1033,16 +1035,16 @@ End
 ;   an object
 ;
 ; :Uses:
-;   Obj = obj_new('carbslib')
+;   Obj = obj_new('fleurDeLas')
 ;
 ; :Examples:
 ;   For Example::
 ;
 ;     Setup the object:
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;
 ;-
-Function carbslib::init
+Function fleurDeLas::init
 
   Compile_opt idl2
   
@@ -1073,7 +1075,7 @@ End
 ;   For Example::
 ;
 ;     Setup the object:
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;       
 ;     Load a LAS file:
 ;       lasObj->loadDataWithPath, '/path/to/the/file.LAS'
@@ -1093,7 +1095,7 @@ End
 ;     If not string array is present, then all the fields are return.
 ;   
 ;-
-Function carbslib::lasPointFieldSelector, tempData, _ref_extra=ex, out
+Function fleurDeLas::lasPointFieldSelector, tempData, _ref_extra=ex, out
 
 ;if n_elements(ex) eq 0 then keyList = strlowcase(tag_names(tempData)) else keyList = strlowcase(ex)
 ;tagList = strlowcase(tag_names(tempData))
@@ -1157,7 +1159,7 @@ End
 ;   For Example::
 ;
 ;     Setup the object:
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;       
 ;     Get the number of flightline(s) for the flight on December 5th 2003: 
 ;       Result=Obj->getNumberOfFlightline(day=338)
@@ -1167,7 +1169,7 @@ End
 ;     Julian day of the survey
 ;
 ;-
-Function carbslib::getNumberOfFlightline, day=surveyDay
+Function fleurDeLas::getNumberOfFlightline, day=surveyDay
 
   Compile_opt idl2
   
@@ -1197,7 +1199,7 @@ End
 ;   For Example::
 ;
 ;     Setup the object:
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003:
 ;       lasObj->loadData, day = '338', flightline = 5
@@ -1206,7 +1208,7 @@ End
 ;       Result = lasObj->getLoadFileName()
 ;
 ;-
-Function carbslib::getLoadFileName
+Function fleurDeLas::getLoadFileName
 
   return, self.lasFilePath
 
@@ -1232,7 +1234,7 @@ End
 ;     geoBox = [488401.968647,487901.968647,235421.265389,234921.265386]
 ;     
 ;     Initialize the object
-;     lasObj = obj_new('carbslib')
+;     lasObj = obj_new('fleurDeLas')
 ;     
 ;     Load the 5th flightline from December 5th 2003 data 
 ;     lasObj->loadData, day='338', flightline=5, /QUIET
@@ -1264,7 +1266,7 @@ End
 ;     If n=0 then all the fields are return.
 ;
 ;-  
-Function carbslib::getData, boundingBox=b, max=max, min=min, pointNumber=v, all=all, _ref_extra=ex
+Function fleurDeLas::getData, boundingBox=b, max=max, min=min, pointNumber=v, all=all, _ref_extra=ex
 
 ; start time
 T = SYSTIME(1)
@@ -1481,7 +1483,7 @@ End
 ;     geoBox = [488401.968647,487901.968647,235421.265389,234921.265386]
 ;
 ;     Initialize the object
-;     lasObj = obj_new('carbslib')
+;     lasObj = obj_new('fleurDeLas')
 ;
 ;     Load the 5th flightline from December 5th 2003 data
 ;     lasObj->loadData, day='338', flightline=5, /QUIET
@@ -1513,7 +1515,7 @@ End
 ;     If n=0 then all the fields are return.
 ;
 ;-
-Function carbslib::getDataFromSelectedData, boundingBox=b, max=max, min=min, pointNumber=v, all=all, _ref_extra=ex
+Function fleurDeLas::getDataFromSelectedData, boundingBox=b, max=max, min=min, pointNumber=v, all=all, _ref_extra=ex
 
   ; start time
   T = SYSTIME(1)
@@ -1725,14 +1727,14 @@ End
 ;   For Example::
 ;
 ;     Setup the object:
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;       lasObj->loadData, inputFile = /Path/to/las/file
 ;       
 ;     Get the start & end time of the flightline:
 ;       Result = lasObj->getDataTime()
 ;
 ;-
-Function carbslib::getDataTime
+Function fleurDeLas::getDataTime
 
     minTime=min(((*self.lasData).time), max=maxTime)
     return, [minTime, maxTime]
@@ -1756,7 +1758,7 @@ End
 ; :Examples:
 ;
 ;     Setup the object:
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003
 ;       lasObj->loadData, day = '338', flightline = 5
@@ -1773,7 +1775,7 @@ End
 ;     If not set, the return is an `array of structure` of the selected points.
 ;     
 ;-
-Function carbslib::getDataFromClass, class=cl, outputId=outputId
+Function fleurDeLas::getDataFromClass, class=cl, outputId=outputId
 
 ; start time
 T = SYSTIME(1)
@@ -1839,7 +1841,7 @@ End
 ; :Examples:
 ;
 ;     Setup the object:
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003
 ;       lasObj->loadData, day = '338', flightline = 5
@@ -1856,7 +1858,7 @@ End
 ;     If not set, the return is an `array of structure` of the selected points.
 ;     
 ;-
-Function carbslib::getSelectedDataByClass, class=cl, outputId=outputId
+Function fleurDeLas::getSelectedDataByClass, class=cl, outputId=outputId
 
   ; start time
   T = SYSTIME(1)
@@ -1928,7 +1930,7 @@ End
 ; :Examples:
 ;
 ;     Setup the object:
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003
 ;       lasObj->loadData, day = '338', flightline = 5
@@ -1945,7 +1947,7 @@ End
 ;     If not set, the return is an `array of structure` of the selected points.
 ;
 ;-
-Function carbslib::getSelectedDataByReturnNumber, return_number=rtnb, outputId=outputId
+Function fleurDeLas::getSelectedDataByReturnNumber, return_number=rtnb, outputId=outputId
 
   ; start time
   T = SYSTIME(1)
@@ -2015,7 +2017,7 @@ End
 ; :Examples:
 ;
 ;     Setup the object:
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003
 ;       lasObj->loadData, day = '338', flightline = 5
@@ -2032,7 +2034,7 @@ End
 ;     If not set, the return is an `array of structure` of the selected points.
 ;
 ;-
-Function carbslib::getDataFromReturnNumber, return_number=rtnb, outputId=outputId
+Function fleurDeLas::getDataFromReturnNumber, return_number=rtnb, outputId=outputId
 
   ; start time
   T = SYSTIME(1)
@@ -2097,7 +2099,7 @@ End
 ; :Examples:
 ;
 ;     Setup the object:
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003
 ;       lasObj->loadData, day = '338', flightline = 5
@@ -2114,7 +2116,7 @@ End
 ;     If not set, the return is an `array of structure` of the selected points.
 ;
 ;-
-Function carbslib::getSelectedDataByNumberOfReturns, return_number=rtnb, outputId=outputId
+Function fleurDeLas::getSelectedDataByNumberOfReturns, return_number=rtnb, outputId=outputId
 
   ; start time
   T = SYSTIME(1)
@@ -2170,7 +2172,7 @@ End
 
 
 
-Function carbslib::removeOffPoints, tileID, outputId=outputId
+Function fleurDeLas::removeOffPoints, tileID, outputId=outputId
 
   ; start time
   T = SYSTIME(1)
@@ -2232,7 +2234,7 @@ End
 ; :Examples:
 ;
 ;     Setup the object:
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;       lasObj->loadData, inputFile = /Path/to/las/file
 ;
 ;     Get all the points corresponding to second return:
@@ -2247,7 +2249,7 @@ End
 ;     If not set, the return is an `array of structure` of the selected points.
 ;
 ;-
-Function carbslib::getDataFromNumberOfReturns, return_number=rtnb, outputId=outputId
+Function fleurDeLas::getDataFromNumberOfReturns, return_number=rtnb, outputId=outputId
 
   ; start time
   T = SYSTIME(1)
@@ -2315,7 +2317,7 @@ End
 ;
 ;     Setup the object:
 ;     
-;       lasObj = obj_new('carbslib')
+;       lasObj = obj_new('fleurDeLas')
 ;
 ;     Load the 5th flightline of survey from December 5th 2003:
 ;       
@@ -2334,14 +2336,14 @@ End
 ;     If set, returns all the waveforms of the file as an `intarr(n,m)` where
 ;     n is the number of samples per waveform and m is the number of waveform(s) returned.
 ;   loadedPoints : in, optional, type=boolean
-;     If set, returns the waveforms associate to the points loaded in memory during the last call of carbslib::getData() method.
+;     If set, returns the waveforms associate to the points loaded in memory during the last call of fleurDeLas::getData() method.
 ;     It will return a `intarr(n,m)` where n is the number of samples per waveform and m is the number of waveform(s) returned.
 ;   electric: in, optional, type=boolean
 ;     If set, the return waveform are converted to voltage value as recorded by the system. 
 ;     It will return a `dblarr(n,m)` where n is the number of samples per waveform and m is the number of waveform(s) returned.
 ;
 ;-
-Function carbslib::getWave, all=all, loadedPoints=loadedPoints, electric=electric
+Function fleurDeLas::getWave, all=all, loadedPoints=loadedPoints, electric=electric
 
 ;TODO: Check if the waveforms are inside the LAS file if not find the wave file and open it
 if (*(self.lasHeader)).versionMinor le 2 then begin
@@ -2481,7 +2483,7 @@ End
 ;
 ;
 ;-
-Function carbslib::getTileIndex, index
+Function fleurDeLas::getTileIndex, index
 
   if n_elements(index) ne 0 then begin
     
@@ -2511,7 +2513,7 @@ End
 ;   Result=Obj->getSelectedDataIndex()
 ;
 ;-
-Function carbslib::getSelectedDataIndex
+Function fleurDeLas::getSelectedDataIndex
 
   if ptr_valid(self.getDataIndex) then return, (*(self.getDataIndex)) else print, 'Nothing to return, please update the selection first...'
 
@@ -2614,7 +2616,7 @@ End
 ;     If set, will return the bounding box of the LAS file.
 ;     The result will be a `dblarr(4)` of [XMAX,XMIN,YMAX,YMIN,ZMAX,ZMIN].
 ;-
-Function carbslib::getHeaderProperty,$
+Function fleurDeLas::getHeaderProperty,$
   header=header,$
   signature=signature,$
   versionMajor=versionMajor,$
@@ -2677,7 +2679,7 @@ End
 
 
 
-Function carbslib::getVlr,$
+Function fleurDeLas::getVlr,$
   waveDescriptorHeader=waveDescriptorHeader,$
   waveDescriptorArray=waveDescriptorArray,$
   geoTiff=geoTiff,$
@@ -2737,7 +2739,7 @@ End
 ;         }
 ;         
 ;-
-Function carbslib::getEVlr,$
+Function fleurDeLas::getEVlr,$
   header=header
   
 if keyword_set(header) then return, (*(self.lasWaveEvlrHeader))  
@@ -2760,7 +2762,7 @@ End
 ;   Result=Obj->getPointSize()
 ;
 ;-
-Function carbslib::getPointSize
+Function fleurDeLas::getPointSize
  
 return, self.lasDataStrSz  
   
@@ -2784,7 +2786,7 @@ End
 ;   Result=Obj->setHeader(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeader, temp
+Function fleurDeLas::setHeader, temp
 (*(self.lasHeader))=temp
 End
 
@@ -2806,7 +2808,7 @@ End
 ;   Result=Obj->setHeaderSignature(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderSignature, temp
+Function fleurDeLas::setHeaderSignature, temp
 (*(self.lasHeader)).signature = temp
 End
 
@@ -2828,7 +2830,7 @@ End
 ;   Result=Obj->setHeaderVersionMajor(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderVersionMajor, temp
+Function fleurDeLas::setHeaderVersionMajor, temp
 (*(self.lasHeader)).versionMajor = temp
 End
 
@@ -2850,7 +2852,7 @@ End
 ;   Result=Obj->setHeaderVersionMinor(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderVersionMinor, temp
+Function fleurDeLas::setHeaderVersionMinor, temp
 (*(self.lasHeader)).versionMinor = temp
 End  
 
@@ -2872,7 +2874,7 @@ End
 ;   Result=Obj->setHeaderSystemID(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderSystemID, temp
+Function fleurDeLas::setHeaderSystemID, temp
 
   dum = ((*(self.lasHeader)).systemID)
   dum[0] = temp
@@ -2898,7 +2900,7 @@ End
 ;   Result=Obj->setHeaderSoftwareID(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderSoftwareID, temp
+Function fleurDeLas::setHeaderSoftwareID, temp
  
   dum = ((*(self.lasHeader)).softwareID)
   dum[0] = temp
@@ -2924,7 +2926,7 @@ End
 ;   Result=Obj->setHeaderDay(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderDay, temp
+Function fleurDeLas::setHeaderDay, temp
 (*(self.lasHeader)).day = temp
 End
 
@@ -2946,7 +2948,7 @@ End
 ;   Result=Obj->setHeaderYear(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderYear, temp
+Function fleurDeLas::setHeaderYear, temp
 (*(self.lasHeader)).year = temp
 End
 
@@ -2968,7 +2970,7 @@ End
 ;   Result=Obj->setHeaderDataOffset(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderDataOffset, temp
+Function fleurDeLas::setHeaderDataOffset, temp
 (*(self.lasHeader)).dataOffset = temp
 End
 
@@ -2990,7 +2992,7 @@ End
 ;   Result=Obj->setHeaderNRecords(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderNRecords, temp
+Function fleurDeLas::setHeaderNRecords, temp
 (*(self.lasHeader)).nRecords = temp
 End
 
@@ -3012,7 +3014,7 @@ End
 ;   Result=Obj->setHeaderPointFormat(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderPointFormat, temp
+Function fleurDeLas::setHeaderPointFormat, temp
 (*(self.lasHeader)).pointFormat = temp
 End
 
@@ -3034,7 +3036,7 @@ End
 ;   Result=Obj->setHeaderPointLength(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderPointLength, temp
+Function fleurDeLas::setHeaderPointLength, temp
 (*(self.lasHeader)).pointLength = temp
 End
 
@@ -3056,7 +3058,7 @@ End
 ;   Result=Obj->setHeaderNPoints(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderNPoints, temp
+Function fleurDeLas::setHeaderNPoints, temp
 (*(self.lasHeader)).nPoints = temp
 End
 
@@ -3078,7 +3080,7 @@ End
 ;   Result=Obj->setHeaderNReturns(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderNReturns, temp
+Function fleurDeLas::setHeaderNReturns, temp
 (*(self.lasHeader)).nReturns = temp
 End
 
@@ -3100,7 +3102,7 @@ End
 ;   Result=Obj->setHeaderXScale(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderXScale, temp
+Function fleurDeLas::setHeaderXScale, temp
 (*(self.lasHeader)).xScale = temp
 End
 
@@ -3122,7 +3124,7 @@ End
 ;   Result=Obj->setHeaderYScale(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderYScale, temp
+Function fleurDeLas::setHeaderYScale, temp
 (*(self.lasHeader)).yScale = temp
 End
 
@@ -3144,7 +3146,7 @@ End
 ;   Result=Obj->setHeaderZScale(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderZScale, temp
+Function fleurDeLas::setHeaderZScale, temp
 (*(self.lasHeader)).zScale = temp
 End
 
@@ -3166,7 +3168,7 @@ End
 ;   Result=Obj->setHeaderXOffset(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderXOffset, temp
+Function fleurDeLas::setHeaderXOffset, temp
 (*(self.lasHeader)).xOffset = temp
 End
 
@@ -3188,7 +3190,7 @@ End
 ;   Result=Obj->setHeaderYOffset(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderYOffset, temp
+Function fleurDeLas::setHeaderYOffset, temp
 (*(self.lasHeader)).yOffset = temp
 End
 
@@ -3210,7 +3212,7 @@ End
 ;   Result=Obj->setHeaderZOffset(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderZOffset, temp
+Function fleurDeLas::setHeaderZOffset, temp
 (*(self.lasHeader)).zOffset = temp
 End
 
@@ -3232,7 +3234,7 @@ End
 ;   Result=Obj->setHeaderXMax(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderXMax, temp
+Function fleurDeLas::setHeaderXMax, temp
 (*(self.lasHeader)).xMax = temp
 End
 
@@ -3254,7 +3256,7 @@ End
 ;   Result=Obj->setHeaderYMax(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderYMax, temp
+Function fleurDeLas::setHeaderYMax, temp
 (*(self.lasHeader)).yMax = temp
 End
 
@@ -3276,7 +3278,7 @@ End
 ;   Result=Obj->setHeaderZMax(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderZMax, temp
+Function fleurDeLas::setHeaderZMax, temp
 (*(self.lasHeader)).zMax = temp
 End
 
@@ -3298,7 +3300,7 @@ End
 ;   Result=Obj->setHeaderXMin(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderXMin, temp
+Function fleurDeLas::setHeaderXMin, temp
 (*(self.lasHeader)).xMin = temp
 End
 
@@ -3320,7 +3322,7 @@ End
 ;   Result=Obj->setHeaderYMin(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderYMin, temp
+Function fleurDeLas::setHeaderYMin, temp
 (*(self.lasHeader)).yMin = temp
 End
 
@@ -3342,7 +3344,7 @@ End
 ;   Result=Obj->setHeaderZMin(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderZMin, temp
+Function fleurDeLas::setHeaderZMin, temp
 (*(self.lasHeader)).zMin = temp
 End
 
@@ -3363,7 +3365,7 @@ End
 ;   Result=Obj->setHeader(temp=tempvalue)
 ;
 ;-
-Function carbslib::setHeaderStartWaveform, temp
+Function fleurDeLas::setHeaderStartWaveform, temp
 (*(self.lasHeader)).startWaveform = temp
 End
 
@@ -3395,7 +3397,7 @@ End
 ;   Result=Obj->setVlrWaveDescriptorHeader(temp=tempvalue)
 ;
 ;-
-Function carbslib::setVlrWaveDescriptorHeader, temp
+Function fleurDeLas::setVlrWaveDescriptorHeader, temp
 ;(*(self.lasHeader)).lasWaveDsptrHdr = temp
 (*(self.lasWaveDsptrHdr)) = temp
 End
@@ -3428,7 +3430,7 @@ End
 ;   Result=Obj->setVlrWaveDescriptorArray(temp=tempvalue)
 ;
 ;-
-Function carbslib::setVlrWaveDescriptorArray, temp
+Function fleurDeLas::setVlrWaveDescriptorArray, temp
 ;(*(self.lasHeader)).lasWaveDsptr = temp
 (*(self.lasWaveDsptr)) = temp
 End
@@ -3452,7 +3454,7 @@ End
 ;     A binary structure of the EVLR.
 ;
 ;-
-Function carbslib::setEVlr, temp
+Function fleurDeLas::setEVlr, temp
 (*(self.lasWaveEvlrHeader)) = temp  
 End
 
@@ -3473,7 +3475,7 @@ End
 ;   February 2014 - Fully functional
 ;
 ;-
-Pro carbslib::writeLAS, outFile
+Pro fleurDeLas::writeLAS, outFile
 
 openw, 1, outFile
 
@@ -3481,11 +3483,11 @@ self.out->print, 1, "Writing the new file on the disk at " + strcompress(string(
 
 ; Defining System ID
 sysID = bytarr(32)
-sysID[0] = byte('carbslib by Carbomap Ltd')
+sysID[0] = byte('fleurDeLas by Carbomap Ltd')
 dum = self.setHeaderSystemID(sysID)
 ; Defining Software ID
 softID = Bytarr(32)
-softID[0] = Byte('carbslib::writeLAS')
+softID[0] = Byte('fleurDeLas::writeLAS')
 dum = self.setHeaderSoftwareID(softID)
 
 lasHeader = self->getHeaderProperty(/header)
@@ -3597,7 +3599,7 @@ End
 
 
 
-Function carbslib::getSelectedDataMaximumHeight, outputId=outputId
+Function fleurDeLas::getSelectedDataMaximumHeight, outputId=outputId
 
 ;print, (*(self.lasHeader)).zscale , (*(self.lasHeader)).zoffset
   maxH = max( ((*self.lasData).elev * 0.001) + 0., maxSub )
@@ -3616,7 +3618,7 @@ End
 
 
 
-Function carbslib::getSelectedDataRandom, seed, n, outputId=outputId
+Function fleurDeLas::getSelectedDataRandom, seed, n, outputId=outputId
 
   dum = n_elements(self.getSelectedDataIndex())
   rNumb = randomu(seed, n)
@@ -3666,7 +3668,7 @@ End
 ;
 ; :Author: antoine
 ;-
-Function carbslib::dump, val, outputPath=outputPath
+Function fleurDeLas::dump, val, outputPath=outputPath
 
   x = ((*self.lasData).east * (*(self.lasHeader)).xscale) + (*(self.lasHeader)).xoffset
   y = ((*self.lasData).north * (*(self.lasHeader)).yscale) + (*(self.lasHeader)).yoffset
@@ -3711,7 +3713,7 @@ End
 
 
 
-Function carbslib::getScaledCoordinates
+Function fleurDeLas::getScaledCoordinates
 
   return, [ $
           [ ((*self.lasData).east * (*(self.lasHeader)).xscale) + (*(self.lasHeader)).xoffset ] ,$
@@ -3723,7 +3725,7 @@ End
 
 
 
-Function carbslib::updateSelectArray, index
+Function fleurDeLas::updateSelectArray, index
 
     (*self.selectArray)[index] += 1
     return, 1
@@ -3732,7 +3734,7 @@ End
 
 
 
-Function carbslib::resetselectArray
+Function fleurDeLas::resetselectArray
 
     (*self.selectArray) *= 0
     return, 1
@@ -3741,7 +3743,7 @@ End
 
 
 
-Function carbslib::radiusSelection, center, radius, indexPoints
+Function fleurDeLas::radiusSelection, center, radius, indexPoints
 
   ; Restoring data into memory
   ;dum = self.restoreData()
@@ -3798,7 +3800,7 @@ Function carbslib::radiusSelection, center, radius, indexPoints
 End
 
 
-Function carbslib::polygonSelection, boundPoints, indexPoints
+Function fleurDeLas::polygonSelection, boundPoints, indexPoints
 
   ; Restoring data into memory
   ;dum = self.restoreData()
@@ -3884,14 +3886,14 @@ End
 ; :Author:
 ;   Antoine Cottin
 ;-
-Function carbslib::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlrId ,vlrArr, obj
+Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlrId ,vlrArr, obj
 
   ; Creating a binary file that will hold the VLR Records
   ;CD, '~/IDLWorkspace83/Saints/'
   close, 2
 
   ; Creating a temp file that hold ALL the VLR records
-  ; XXX: will need to be changed we integrated to carbslib using self.tempDirPath
+  ; XXX: will need to be changed we integrated to fleurDeLas using self.tempDirPath
   openw, 2, './temp/vlrRecords.bin'
 
   ; Closing all lun(s) to avoid any issue
@@ -4037,7 +4039,7 @@ End
 
 ;+
 ;   The purpose of this method is the read the LAS file.
-;   This method is automatically called when the carbslib::loadData() is invoque.
+;   This method is automatically called when the fleurDeLas::loadData() is invoque.
 ;
 ; :Category:
 ; 	LAS
@@ -4064,14 +4066,14 @@ End
 ;   Create by Antoine Cottin, Jully 2012.
 ;   February 2014 :
 ;     -Remodeling of the whole procedure for better results
-;     -Integration to the carbslib object
+;     -Integration to the fleurDeLas object
 ;
 ; :Author:
 ;   Antoine Cottin
 ;   
 ; :Hidden:
 ;-
-Function carbslib::getLASHeaderDataStr, inputLun, minorVersion, majorVersion, header, dataStr
+Function fleurDeLas::getLASHeaderDataStr, inputLun, minorVersion, majorVersion, header, dataStr
 
   self.out->print,1,strcompress("LAS Version " + string(fix(majorVersion)) + "." + strcompress(string(fix(minorVersion)),/remove_all) + " detected.")
   self.out->print,1, "Initializing the header..."
@@ -4111,7 +4113,7 @@ End
 ;
 ;+
 ;   The purpose of this method is the read the LAS file.
-;   This method is automatically called when the carbslib::loadData() is invoque.
+;   This method is automatically called when the fleurDeLas::loadData() is invoque.
 ;
 ; :Category:
 ; 	LAS
@@ -4134,14 +4136,14 @@ End
 ;   Create by Antoine Cottin, Jully 2012.
 ;   February 2014 :
 ;     -Remodeling of the whole procedure for better results
-;     -Integration to the carbslib object
+;     -Integration to the fleurDeLas object
 ;
 ; :Author:
 ;   Antoine Cottin
 ;
 ; :Hidden:
 ;-
-Function carbslib::readLAS, inputFile, header, dataStr
+Function fleurDeLas::readLAS, inputFile, header, dataStr
 
   compile_opt idl2, logical_predicate
 
@@ -4227,11 +4229,11 @@ end
 ; :Author: antoine
 ;-
 
-Function carbslib::addGeoKey
+Function fleurDeLas::addGeoKey
 
 
   out = obj_new('consoleOutput')
-  ;a = obj_new('carbslib')
+  ;a = obj_new('fleurDeLas')
   ;a->load_data, "I:\RG12_10-206b-FW-lidar-20121217\fw_laser\las1.3\LDR-FW-RG12_10-2012-206b-03.LAS"
   vlrGeoKeyArray=a->getvlr(/vlrGeoKeyArray)
 

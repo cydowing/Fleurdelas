@@ -1,6 +1,6 @@
 ;+
 ; :Description:
-;    This is a simple pro file to demonstrate how to use the IDL laslib
+;    This is a simple pro file to demonstrate how to use the IDL fleurdelas
 ;
 ; :Category:
 ; 	HELP
@@ -20,8 +20,8 @@
 ;-
 Pro testLASObj
 
-; Initialization of the carbslib object 
-lasobj = obj_new('carbslib')
+; Initialization of the fleurdelas object 
+lasobj = obj_new('fleurdelas')
 
 ; Loading the data from the MiltonKeynes.las file
 ; The input file can be a relative path to the IDL root path, or a fully qualified path
@@ -41,12 +41,12 @@ duw = lasobj.getWave()
 index = indgen(100)+100
 dum = lasobj.getData(pointNumber = index)
 
-; Also note that the point data can be filtered by height - check the laslib::getData comment for more info
+; Also note that the point data can be filtered by height - check the fleurdelas::getData comment for more info
 
 ; Get data that lie into the bounding box define by the 4 elements array
 dum = lasobj.getData(boundingBox=[486492.218750D, 486419.937500D, 239796.812500D, 239399.734375D])
 
-; Dump the load data points (the ones from the last laslib::getData() call) into an ascii file
+; Dump the load data points (the ones from the last fleurdelas::getData() call) into an ascii file
 dum = lasobj.dump()
 
 
