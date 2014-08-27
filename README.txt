@@ -1,7 +1,7 @@
 Faisdodo
 ========
 
-The carbslib class is an IDL implementation of a LAS file reader/writer. The class object can read, write and manipulate points and/or full waveforms contained in the binary LAS file format.
+The fleurdelas class is an IDL implementation of a LAS file reader/writer. The class object can read, write and manipulate points and/or full waveforms contained in the binary LAS file format.
 It can handle any LAS 1.0, 1.1, 1.2, 1.3 with point format 0, 1, 2, 3, 4, 5.
 
 We are aware that although releasing "open source" code in IDL might not be as "open” as code in C/C++, but here at Carbomap we use this library every day in processing our workflow, with fast and efficient results for LiDAR data manipulation.
