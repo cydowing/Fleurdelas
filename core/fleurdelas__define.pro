@@ -85,7 +85,8 @@
 ;     -Improvement of fleurDeLas::cleanup
 ;     
 ;    20 August 2014
-;     - We changed the name to fleur de las;        
+;     - We changed the name to fleur de las
+;        
 ;-
 Pro fleurDeLas__define
 
@@ -3461,138 +3462,221 @@ End
 
 
 ;+
-; This Procedure write a LAS file. Still in beta.
+; :Description:
+;   This Procedure write a LAS file. Still in beta.
 ;
-; :Categories:
-;   GENERAL, LAS
+; :Category:
+;   LAS, GENERAL
 ;
-; :Returns:
+; :Return:
 ;   1 if the file is correclty write.
 ;   0 if error.
-;   
+;
+; :Uses:
+;   Dum = fleurdelas::writeLAS()
+;
+; :Keywords:
+;    id: in, optional, type=int
+;     a scalar or array that represent the points index
+;    output: in, required, type=string
+;     fully qualified path of the new las file
+;    selected: in, optional, type=boolean
+;     a flag to write the data selected in memory
+;
 ; :History:
 ;   Septembre 2012 - initial writing
 ;   February 2014 - Fully functional
 ;
+; :Author: antoine
 ;-
-Pro fleurDeLas::writeLAS, outFile
+Function fleurdelas::writeLAS, id = id, output = output, selected = selected
 
-openw, 1, outFile
+  Close, 1
+  Openw, 1, output
 
-self.out->print, 1, "Writing the new file on the disk at " + strcompress(string(outFile),/remove_all)
+  self.Out->print, 1, "Writing the new file on the disk at " + Strcompress(String(output),/remove_all)
 
-; Defining System ID
-sysID = bytarr(32)
-sysID[0] = byte('fleurDeLas by Carbomap Ltd')
-dum = self.setHeaderSystemID(sysID)
-; Defining Software ID
-softID = Bytarr(32)
-softID[0] = Byte('fleurDeLas::writeLAS')
-dum = self.setHeaderSoftwareID(softID)
+  ; Defining System ID
+  sysID = Bytarr(32)
+  sysID[0] = Byte('fleurdelas by Carbomap Ltd')
+  dum = self.setHeaderSystemID(sysID)
+  ; Defining Software ID
+  softID = Bytarr(32)
+  softID[0] = Byte('fleurdelas::writeLAS')
+  dum = self.setHeaderSoftwareID(softID)
 
-lasHeader = self->getHeaderProperty(/header)
+  ; Updating header with id information
+  if N_elements(id) ne 0 then begin
+    
+    ; Number of points
+    dum = self.setHeaderNPoints(n_elements(id))
+    ; Getting points coordinates
+    coor = self.getXYZ()
+    ; Min, Max of easting
+    maxX = max(coor[*,0], min=minX)
+    dum = self.setHeaderXMax(maxX)
+    dum = self.setHeaderXMin(minX)
+    ; Min, Max of northing    
+    maxY = max(coor[*,1], min=minY)
+    dum = self.setHeaderYMax(maxY)
+    dum = self.setHeaderYMin(minY)    
+    ; Min, Max of elev
+    maxZ = max(coor[*,2], min=minZ)
+    dum = self.setHeaderZMax(maxZ)
+    dum = self.setHeaderZMin(minZ)
 
-writeu, 1, lasHeader
-self.out->print, 1, "Writing public header..."
-point_lun, -1, posHeader
-if posHeader eq lasHeader.headerSize then self.out->print, 1,  "Public header successfully written..."
+  endif
+  
+  if n_elements(selected) ne 0 then begin
+    
+    ; updating the number of points
+    dum = self.setHeaderNPoints(self.getSelectedDataNumberOfPoints())
+    ; Getting points coordinates
+    coor = self.getXYZ()
+    ; Min, Max of easting
+    maxX = max(coor[*,0], min=minX)
+    dum = self.setHeaderXMax(maxX)
+    dum = self.setHeaderXMin(minX)
+    ; Min, Max of northing    
+    maxY = max(coor[*,1], min=minY)
+    dum = self.setHeaderYMax(maxY)
+    dum = self.setHeaderYMin(minY)    
+    ; Min, Max of elev
+    maxZ = max(coor[*,2], min=minZ)
+    dum = self.setHeaderZMax(maxZ)
+    dum = self.setHeaderZMin(minZ)
+    
+  endif
+  
+  
+  lasHeader = self->getHeaderProperty(/header)
+
+  Writeu, 1, lasHeader
+  self.Out->print, 1, "Writing public header..."
+  Point_lun, -1, posHeader
+  if posHeader eq lasHeader.Headersize then self.Out->print, 1,  "Public header successfully written..."
 
 
-; For each VLR, open get the byte size of the record
-; Open the corresponding file
-; Read the file
-; write the raw content into the new LAS file
-self.out->print, 1, "Writing Variable Length Records..."
-vlrFileID = self->getvlr(/vlrFileID)
-vlrByteSize = self->getvlr(/vlrByteSize)
-rB = 0L
-wB = 0L
-posVlrArray = 0L
-for x=0, self.getHeaderProperty(/numberOfVLR)-1 do begin
-openr, 2, vlrFileID[x]
-dum = bytarr(vlrByteSize[x])
-readu, 2, dum
-point_lun, -2, r
-rB += r
-close, 2
-writeu,1,dum
-point_lun, -1, w
-if x eq 0 then begin
-  wB += w-posHeader 
-endif else begin
-  wB += (w - wB)
-endelse
-endfor
-if rB eq wB-posHeader then begin
-byte1 = wB-posHeader
-self.out->print, 1, "Variable Length Records successfully written..."
-self.out->print, 1, strcompress(string(byte1),/remove_all) + " bytes have been written..."
-endif else begin
-  self.out->print, 2, "Something wrong with the Variable Length Records block..."
-endelse
-
-
-self.out->print, 1, "Checking file integrity..."
-totalBytesWritten = posHeader + byte1 ;+ byte2 + byte3 + byte4 + byte5 + byte6
-if lasHeader.dataOffset eq totalBytesWritten then self.out->print, 1, "File integrity pass..." else begin
-  self.out->print, 2, "File integrity fail..."
-  self.out->print, 2, strcompress(string(totalBytesWritten),/remove_all)+" bytes have been written so far, or the file header stipulates "+strcompress(string(lasHeader.dataOffset),/remove_all)+" bytes..."
-  if lasHeader.dataOffset-totalBytesWritten eq 2 then self.out->print, 1, "The header is followed by 2 user-defined bytes..."
-  self.out->print, 2, "Moving "+strcompress(string(lasHeader.dataOffset-totalBytesWritten),/remove_all)+" bytes ahead..."
-  point_lun, -1, actualPos
-  point_lun, 1, actualPos + (lasHeader.dataOffset-totalBytesWritten)
-  self.out->print, 2, "Done... resuming writting process..."
+  ; For each VLR, open get the byte size of the record
+  ; Open the corresponding file
+  ; Read the file
+  ; write the raw content into the new LAS file
+  self.Out->print, 1, "Writing Variable Length Records..."
+  vlrFileID = self->getvlr(/vlrFileID)
+  
+  if vlrFileID ne !NULL then begin
+  
+    vlrByteSize = self->getvlr(/vlrByteSize)
+    rB = 0L
+    wB = 0L
+    posVlrArray = 0L
+    for x=0, self.getHeaderProperty(/numberOfVLR)-1 do begin
+      Openr, 2, vlrFileID[x]
+      dum = Bytarr(vlrByteSize[x])
+      Readu, 2, dum
+      Point_lun, -2, r
+      rB += r
+      Close, 2
+      Writeu,1,dum
+      Point_lun, -1, w
+      if x eq 0 then begin
+        wB += w-posHeader
+      endif else begin
+        wB += (w - wB)
+      endelse
+    endfor
+    if rB eq wB-posHeader then begin
+      byte1 = wB-posHeader
+      self.Out->print, 1, "Variable Length Records successfully written..."
+      self.Out->print, 1, Strcompress(String(byte1),/remove_all) + " bytes have been written..."
+    endif else begin
+      self.Out->print, 2, "Something wrong with the Variable Length Records block..."
+    endelse
+  
+  endif else begin
+    
+    ; No VLR write - length set to 0
+    byte1 = 0
+    
   endelse
 
-pointSize = self->getPointSize()
-theoriticalDataBlockSize = pointSize * lasHeader.nPoints
-;print, theoriticalDataBlockSize
-point_lun, -1, posBeforeDataBlock
 
-self.out->print, 1, "Writing points data records..."
-data = self->getData(/all)
-writeu, 1, data
+  self.Out->print, 1, "Checking file integrity..."
+  totalBytesWritten = posHeader + byte1 ;+ byte2 + byte3 + byte4 + byte5 + byte6
+  if lasHeader.Dataoffset eq totalBytesWritten then self.Out->print, 1, "File integrity pass..." else begin
+    self.Out->print, 2, "File integrity fail..."
+    self.Out->print, 2, Strcompress(String(totalBytesWritten),/remove_all)+" bytes have been written so far, or the file header stipulates "+Strcompress(String(lasHeader.Dataoffset),/remove_all)+" bytes..."
+    if lasHeader.Dataoffset-totalBytesWritten eq 2 then self.Out->print, 1, "The header is followed by 2 user-defined bytes..."
+    self.Out->print, 2, "Moving "+Strcompress(String(lasHeader.Dataoffset-totalBytesWritten),/remove_all)+" bytes ahead..."
+    Point_lun, -1, actualPos
+    Point_lun, 1, actualPos + (lasHeader.Dataoffset-totalBytesWritten)
+    self.Out->print, 2, "Done... resuming writting process..."
+  endelse
+
+  pointSize = self->getPointSize()
+  theoriticalDataBlockSize = pointSize * lasHeader.Npoints
+  ;print, theoriticalDataBlockSize
+  Point_lun, -1, posBeforeDataBlock
+
+  self.Out->print, 1, "Writing points data records..."
+
+  if N_elements(id) ne 0 then begin
+    self.Out->print, 1, "Using index for the data records..."
+    data = self->getData(pointNumber = id)
+  endif else begin
+    if n_elements(selected) ne 0 then begin
+      self.Out->print, 1, "Writing loaded data records..."
+      data = *(self.lasData)
+    endif else begin
+      self.Out->print, 1, "Writing all data records..."
+      data = self->getData(/all)
+    endelse
+  endelse
+
+  Writeu, 1, data
 
 
-point_lun, -1, posAfterDataBlock
-byte7 = posAfterDataBlock-posBeforeDataBlock
+  Point_lun, -1, posAfterDataBlock
+  byte7 = posAfterDataBlock-posBeforeDataBlock
 
-self.out->print, 1, "Checking file integrity..."
-fileIntegrity = theoriticalDataBlockSize - byte7
-if fileIntegrity eq 0 then self.out->print, 1, "File integrity pass..." else begin
-  self.out->print, 3, "File integrity fail..."
+  self.Out->print, 1, "Checking file integrity..."
+  fileIntegrity = theoriticalDataBlockSize - byte7
+  if fileIntegrity eq 0 then self.Out->print, 1, "File integrity pass..." else begin
+    self.Out->print, 3, "File integrity fail..."
   endelse
 
 
 
-; Checking if the file have waveform information
-if ptr_valid(temp01) then begin
+  ; Checking if the file have waveform information
+  if Ptr_valid(temp01) then begin
 
-self.out->print, 1, "Position before waveform block: ", posAfterDataBlock
-self.out->print, 1, "What the header helds", lasHeader.startWaveform
+    self.Out->print, 1, "Position before waveform block: ", posAfterDataBlock
+    self.Out->print, 1, "What the header helds", lasHeader.Startwaveform
 
-waveformBlock = self->getWave(/all)
-waveformHeader = self->getEVlr(/header)
+    waveformBlock = self->getWave(/all)
+    waveformHeader = self->getEVlr(/header)
 
-self.out->print, 1, "Size information of the Wave Packet: ", size(waveformBlock)
+    self.Out->print, 1, "Size information of the Wave Packet: ", Size(waveformBlock)
 
-self.out->print, 1, "Writing waveforms header (EVLR header)..."
-writeu, 1, waveformHeader
-point_lun, -1, posWaveformHeader
-self.out->print, 1, "Amount of bytes written for the waveform header: "+strcompress(string(posWaveformHeader-posAfterDataBlock),/remove_all)
+    self.Out->print, 1, "Writing waveforms header (EVLR header)..."
+    Writeu, 1, waveformHeader
+    Point_lun, -1, posWaveformHeader
+    self.Out->print, 1, "Amount of bytes written for the waveform header: "+Strcompress(String(posWaveformHeader-posAfterDataBlock),/remove_all)
 
-self.out->print, 1, "Writing waveforms header (EVLR header)..."
-writeu, 1, byte(waveformBlock)
-point_lun, -1, posWaveformBlock
-self.out->print, 1, "Amount of bytes written for the waveform block: "+strcompress(string(posWaveformBlock-posWaveformHeader),/remove_all)
+    self.Out->print, 1, "Writing waveforms header (EVLR header)..."
+    Writeu, 1, Byte(waveformBlock)
+    Point_lun, -1, posWaveformBlock
+    self.Out->print, 1, "Amount of bytes written for the waveform block: "+Strcompress(String(posWaveformBlock-posWaveformHeader),/remove_all)
 
-endif
+  endif
 
-self.out->print, 1, "Finilizing the file..."
-free_lun, 1
-self.out->print, 1, "Done."
+  self.Out->print, 1, "Finilizing the file..."
+  Free_lun, 1
+  self.Out->print, 1, "Done."
 
-close,1
+  Close,1
+  
+  return, 1
 
 End
 
@@ -4081,10 +4165,10 @@ Function fleurDeLas::getLASHeaderDataStr, inputLun, minorVersion, majorVersion, 
   self.out->print,1, "Reading header..."
   readu, inputLun, header
   
-    self.Out->print,1,'=============== HEADER ==============='
+  self.Out->print,1,'=============== HEADER ==============='
   self.Out->print,1, Strcompress("System identifier: " + String(header.Systemid))
   self.Out->print,1, Strcompress("Generating software: " + String(header.Softwareid))
-  self.Out->print,1, Strcompress("Day/Year of file creation: " + String(Fix(header.Day)) + "/" + Strcompress(String(Fix(header.Year)), /REMOVE_ALL) ) 
+  self.Out->print,1, Strcompress("Day/Year of file creation: " + String(Fix(header.Day)) + "/" + Strcompress(String(Fix(header.Year)), /REMOVE_ALL) )
   self.Out->print,1, Strcompress("Header size: " + String(Fix(header.Headersize)))
   self.Out->print,1, Strcompress("Byte offset to data block: " + String(header.Dataoffset))
   self.Out->print,1, Strcompress("File contains " + String(header.Npoints) + " points.")
@@ -4201,8 +4285,7 @@ end
 
 ;+
 ; 
-;-
-;+
+;-;+
 ; :Description:
 ;    This Function aim to modify the GeoKey record of the VLR record
 ;    Still in beta - WIP
