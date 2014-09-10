@@ -6,7 +6,7 @@ It can handle any LAS 1.0, 1.1, 1.2, 1.3 and 1.4 with point format from 0 to 10.
 
 The project has now a brand new and comprehensive wiki. You will find basic and advance usage of fleurdelas class object.
 
-We also have a user group that you can found at https://groups.google.com/forum/#!forum/fleur-de-las
+We also have a user group that you can found at [https://groups.google.com/forum/#!forum/fleur-de-las]
 
 Please let us know if you want or need more features implemented. Also report any bugs or issues at info at carbomap dot com.
 
