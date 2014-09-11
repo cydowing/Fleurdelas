@@ -8,6 +8,14 @@ The project has now a brand new and comprehensive wiki. You will find basic and 
 
 We also have a user group that you can found at [https://groups.google.com/forum/#!forum/fleur-de-las]
 
+=========
+IMPORTANT
+=========
+
+Fleurdelas needs the Sazerac library in order to works properly, so please don't forget to also clone our Sazerac repository
+
+=========
+
 Please let us know if you want or need more features implemented. Also report any bugs or issues at info at carbomap dot com.
 
 As it is an open project, we would like to see you involved, so please don't hesitate to clone and/or fork this project.
