@@ -3477,8 +3477,8 @@ End
 ;-
 Function fleurdelas::writeLAS, id = id, output = output, selected = selected
 
-  Close, 1
-  Openw, 1, output
+
+  Openw, lasLun, output, /get_lun
 
   self.Out->print, 1, "Writing the new file on the disk at " + Strcompress(String(output),/remove_all)
 
@@ -3537,9 +3537,9 @@ Function fleurdelas::writeLAS, id = id, output = output, selected = selected
   
   lasHeader = self->getHeaderProperty(/header)
 
-  Writeu, 1, lasHeader
+  Writeu, lasLun, lasHeader
   self.Out->print, 1, "Writing public header..."
-  Point_lun, -1, posHeader
+  Point_lun, -lasLun, posHeader
   if posHeader eq lasHeader.Headersize then self.Out->print, 1,  "Public header successfully written..."
 
 
@@ -3557,14 +3557,14 @@ Function fleurdelas::writeLAS, id = id, output = output, selected = selected
     wB = 0L
     posVlrArray = 0L
     for x=0, self.getHeaderProperty(/numberOfVLR)-1 do begin
-      Openr, 2, vlrFileID[x]
+      Openr, rLun, vlrFileID[x], /get_lun
       dum = Bytarr(vlrByteSize[x])
-      Readu, 2, dum
-      Point_lun, -2, r
+      Readu, rLun, dum
+      Point_lun, -rLun, r
       rB += r
-      Close, 2
-      Writeu,1,dum
-      Point_lun, -1, w
+      Close, rLun
+      Writeu, lasLun,dum
+      Point_lun, -lasLun, w
       if x eq 0 then begin
         wB += w-posHeader
       endif else begin
@@ -3594,15 +3594,15 @@ Function fleurdelas::writeLAS, id = id, output = output, selected = selected
     self.Out->print, 2, Strcompress(String(totalBytesWritten),/remove_all)+" bytes have been written so far, or the file header stipulates "+Strcompress(String(lasHeader.Dataoffset),/remove_all)+" bytes..."
     if lasHeader.Dataoffset-totalBytesWritten eq 2 then self.Out->print, 1, "The header is followed by 2 user-defined bytes..."
     self.Out->print, 2, "Moving "+Strcompress(String(lasHeader.Dataoffset-totalBytesWritten),/remove_all)+" bytes ahead..."
-    Point_lun, -1, actualPos
-    Point_lun, 1, actualPos + (lasHeader.Dataoffset-totalBytesWritten)
+    Point_lun, -lasLun, actualPos
+    Point_lun, lasLun, actualPos + (lasHeader.Dataoffset-totalBytesWritten)
     self.Out->print, 2, "Done... resuming writting process..."
   endelse
 
   pointSize = self->getPointSize()
   theoriticalDataBlockSize = pointSize * lasHeader.Npoints
   ;print, theoriticalDataBlockSize
-  Point_lun, -1, posBeforeDataBlock
+  Point_lun, -lasLun, posBeforeDataBlock
 
   self.Out->print, 1, "Writing points data records..."
 
@@ -3619,10 +3619,10 @@ Function fleurdelas::writeLAS, id = id, output = output, selected = selected
     endelse
   endelse
 
-  Writeu, 1, data
+  Writeu, lasLun, data
 
 
-  Point_lun, -1, posAfterDataBlock
+  Point_lun, -lasLun, posAfterDataBlock
   byte7 = posAfterDataBlock-posBeforeDataBlock
 
   self.Out->print, 1, "Checking file integrity..."
@@ -3645,22 +3645,22 @@ Function fleurdelas::writeLAS, id = id, output = output, selected = selected
     self.Out->print, 1, "Size information of the Wave Packet: ", Size(waveformBlock)
 
     self.Out->print, 1, "Writing waveforms header (EVLR header)..."
-    Writeu, 1, waveformHeader
-    Point_lun, -1, posWaveformHeader
+    Writeu, lasLun, waveformHeader
+    Point_lun, -lasLun, posWaveformHeader
     self.Out->print, 1, "Amount of bytes written for the waveform header: "+Strcompress(String(posWaveformHeader-posAfterDataBlock),/remove_all)
 
     self.Out->print, 1, "Writing waveforms header (EVLR header)..."
-    Writeu, 1, Byte(waveformBlock)
-    Point_lun, -1, posWaveformBlock
+    Writeu, lasLun, Byte(waveformBlock)
+    Point_lun, -lasLun, posWaveformBlock
     self.Out->print, 1, "Amount of bytes written for the waveform block: "+Strcompress(String(posWaveformBlock-posWaveformHeader),/remove_all)
 
   endif
 
   self.Out->print, 1, "Finilizing the file..."
-  Free_lun, 1
+  Free_lun, lasLun
   self.Out->print, 1, "Done."
 
-  Close,1
+  Close,lasLun
   
   return, 1
 
@@ -4085,14 +4085,14 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
   endcase
 
   point_lun, -wwLun, endPos
-  close, wwLun
+  free_lun, wwLun
   vlrByteSizeArr[w] = endPos
 
 
 endfor
 
-close, rLun
-close, wLun
+free_lun, rLun
+free_lun, wLun
 
 endif else begin
 
