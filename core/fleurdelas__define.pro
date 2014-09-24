@@ -3955,16 +3955,13 @@ End
 Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlrId ,vlrArr, obj
 
   ; Creating a binary file that will hold the VLR Records
-  ;CD, '~/IDLWorkspace83/Saints/'
-  close, 2
+  
 
   ; Creating a temp file that hold ALL the VLR records
   ; XXX: will need to be changed we integrated to fleurDeLas using self.tempDirPath
   vlrFilePath = self.tempDirPath + self.sysSep + 'vlrRecords.bin'
   openw, wLun, vlrFilePath, /GET_LUN
 
-  ; Closing all lun(s) to avoid any issue
-  close, 1
 
 
   self.out->print,1, "Number of Variable Length Records: " + strcompress(string(fix(header.nRecords)))
