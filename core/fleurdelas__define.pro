@@ -88,43 +88,6 @@
 ;     - We changed the name to fleur de las
 ;        
 ;-
-Pro fleurDeLas__define
-
-; Definition of the data hold by the object
-void = {fleurDeLas, $
-  lasFilePath       : '',$                    ; String representing the path to the LAS file
-  surveyDay         : '',$                    ; String holding the Julian Survey day - only with ARSF-NERC dataset
-  tempDirPath       : '',$                    ; String holding the temporary directory path to store temp file(s) if required
-  rootPath          : '',$                    ; String of the local path where the project is located - for relative path generation
-  lasHeader         : ptr_new(),$             ; Pointer to the header of the LAS file
-  lasDataStr        : ptr_new(),$             ; Pointer to the Point data structure
-  lasDataStrSz      : 0B,$                    ; Size in bytes of the point data structure
-  getDataIndex      : ptr_new(),$             ; Pointer to the index of selected data from the last getData call
-  lasData           : ptr_new(),$             ; Pointer to the point data from the last getData call
-  lasDataIndBackup  : ptr_new(),$             ; Pointer to an index of the original data set to retrieve original data set
-  lasDataExtent     : dblarr(4),$             ; Pointer to a four element double array that contains the geographical extend of the selected data - [xMax, xMin, yMax, yMin]
-  lasNTiles         : 0UL,$                   ; Number of tiles generated
-  lasDataTile       : ptr_new(),$             ; Pointer to a structure that contains the tile index and the points index
-  recTileNumb       : 0L,$                    ; Tile number for recurrent call of extractTrees
-  lasTileExtent     : dblarr(4),$             ; Pointer to a four element double array that contains the geographical extend of the Tiles - [xMax, xMin, yMax, yMin]
-  lasTileFileName   : '',$                    ; String of the Tile Index File.
-  lasWaveDsptr      : ptr_new(),$             ; Pointer to the waveform packet descriptor containing :  bits per sample, wf conversion type, # of samples, temporal spacing, digitizer gain, digitizer offset
-  lasWaveDsptrHdr   : ptr_new(),$             ; Pointer to the waveform packet descriptor header
-  lasWaveEvlrHeader : ptr_new(),$             ; Pointer to the waveform packet header
-  lasWave           : ptr_new(),$             ; Pointer to the waveform data from the last getData call
-  vlrFileID         : ptr_new(),$             ; Pointer to an string array that the path to the temporary files that hold the files name 
-  vlrByteSize       : ptr_new(),$             ; Pointer to an Unsigned Long array that holds the byte size of each key
-  vlrId             : ptr_new(),$             ; Pointer to a byte array that holds a byte flag to describ the geokey
-  vlrArr            : ptr_new(),$             ; Pointer to a pointer array that contains the key in reading order header/key
-  selectArray       : ptr_new(),$             ; Binary Array that acts like a selected flag
-  recursiveN        : 0ULL,$                  ; Counter flag for the tree extraction method recursion
-  out               : obj_new(),$             ; Object holding the console output object
-  xTile             : 300.0 ,$                ; x(meter/feets)/easting(meter/feets)/longitude(degree) size of the tile
-  yTile             : 300.0  $                ; y(meter/feets)/northing(meter/feets)/latitude(degree) size of the tile
-  }
-
-  
-End
 
 
 ;+
@@ -4385,4 +4348,44 @@ print, "Updating wavefrom block offset..."
 if lasHeader.versionMinor ge 3 then dum = a->setHeaderStartWaveform(lasHeader.startWaveform + (nKey * 8ULL) +10UL)
 
 
+End
+
+
+
+Pro fleurDeLas__define
+
+  ; Definition of the data hold by the object
+  void = {fleurDeLas, $
+    lasFilePath       : '',$                    ; String representing the path to the LAS file
+    surveyDay         : '',$                    ; String holding the Julian Survey day - only with ARSF-NERC dataset
+    tempDirPath       : '',$                    ; String holding the temporary directory path to store temp file(s) if required
+    rootPath          : '',$                    ; String of the local path where the project is located - for relative path generation
+    lasHeader         : ptr_new(),$             ; Pointer to the header of the LAS file
+    lasDataStr        : ptr_new(),$             ; Pointer to the Point data structure
+    lasDataStrSz      : 0B,$                    ; Size in bytes of the point data structure
+    getDataIndex      : ptr_new(),$             ; Pointer to the index of selected data from the last getData call
+    lasData           : ptr_new(),$             ; Pointer to the point data from the last getData call
+    lasDataIndBackup  : ptr_new(),$             ; Pointer to an index of the original data set to retrieve original data set
+    lasDataExtent     : dblarr(4),$             ; Pointer to a four element double array that contains the geographical extend of the selected data - [xMax, xMin, yMax, yMin]
+    lasNTiles         : 0UL,$                   ; Number of tiles generated
+    lasDataTile       : ptr_new(),$             ; Pointer to a structure that contains the tile index and the points index
+    recTileNumb       : 0L,$                    ; Tile number for recurrent call of extractTrees
+    lasTileExtent     : dblarr(4),$             ; Pointer to a four element double array that contains the geographical extend of the Tiles - [xMax, xMin, yMax, yMin]
+    lasTileFileName   : '',$                    ; String of the Tile Index File.
+    lasWaveDsptr      : ptr_new(),$             ; Pointer to the waveform packet descriptor containing :  bits per sample, wf conversion type, # of samples, temporal spacing, digitizer gain, digitizer offset
+    lasWaveDsptrHdr   : ptr_new(),$             ; Pointer to the waveform packet descriptor header
+    lasWaveEvlrHeader : ptr_new(),$             ; Pointer to the waveform packet header
+    lasWave           : ptr_new(),$             ; Pointer to the waveform data from the last getData call
+    vlrFileID         : ptr_new(),$             ; Pointer to an string array that the path to the temporary files that hold the files name
+    vlrByteSize       : ptr_new(),$             ; Pointer to an Unsigned Long array that holds the byte size of each key
+    vlrId             : ptr_new(),$             ; Pointer to a byte array that holds a byte flag to describ the geokey
+    vlrArr            : ptr_new(),$             ; Pointer to a pointer array that contains the key in reading order header/key
+    selectArray       : ptr_new(),$             ; Binary Array that acts like a selected flag
+    recursiveN        : 0ULL,$                  ; Counter flag for the tree extraction method recursion
+    out               : obj_new(),$             ; Object holding the console output object
+    xTile             : 300.0 ,$                ; x(meter/feets)/easting(meter/feets)/longitude(degree) size of the tile
+    yTile             : 300.0  $                ; y(meter/feets)/northing(meter/feets)/latitude(degree) size of the tile
+  }
+  
+  
 End

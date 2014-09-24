@@ -1,16 +1,3 @@
-Pro consoleOutput__define
-
-; Definition of the data hold by the object
-void = {consoleOutput, $
-  consoleSetup     :0B, $             ; Execution information output, 0:console,1:file,3:quiet
-  logPath          :'', $             ; Path the to log file
-  consoleLun       :0B  $             ; Path to the LAS file
-  }
-  
-End
-
-
-
 Function consoleOutput::init, _extra = console_options ;, quiet=quiet, file=file, log = log
 
 Compile_opt idl2
@@ -161,3 +148,15 @@ endcase
 End
 
 
+
+
+Pro consoleOutput__define
+
+  ; Definition of the data hold by the object
+  void = {consoleOutput, $
+    consoleSetup     :0B, $             ; Execution information output, 0:console,1:file,3:quiet
+    logPath          :'', $             ; Path the to log file
+    consoleLun       :0B  $             ; Path to the LAS file
+  }
+  
+End

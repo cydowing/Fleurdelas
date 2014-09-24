@@ -1,15 +1,3 @@
-Pro vectorclass__define
-
-  void = {vectorclass, $
-    vx    : 0.D ,$
-    vy    : 0.D ,$
-    vz    : 0.D ,$
-    inherits IDL_Object $
-  }
-  
-End
-
-
 ;+
 ; To be revisited for a better handle or initialisation
 ; possibility to initialize directly with a vectorclass argument
@@ -314,4 +302,16 @@ Function vectorclass::duplicateToVectorArrayClass, nDim
     return, vectorarrayclass( replicate(self.x(),nDim),replicate(self.y(),nDim), replicate(self.z(),nDim) )
     endelse
 
+End
+
+
+Pro vectorclass__define
+
+  void = {vectorclass, $
+    vx    : 0.D ,$
+    vy    : 0.D ,$
+    vz    : 0.D ,$
+    inherits IDL_Object $
+  }
+  
 End

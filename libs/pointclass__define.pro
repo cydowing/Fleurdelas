@@ -1,14 +1,3 @@
-Pro pointclass__define
-
-  void = {pointclass, $
-    x    : 0.D ,$
-    y    : 0.D ,$
-    z    : 0.D $
-  }
-  
-End
-
-
 Function pointclass::init, cox, coy, coz
 
   Compile_opt idl2
@@ -154,5 +143,16 @@ Function pointclass::duplicateToPointArrayClass, nDim
   endif else begin
     return, pointarrayclass( replicate(self.x(),nDim),replicate(self.y(),nDim), replicate(self.z(),nDim) )
   endelse
+  
+End
+
+
+Pro pointclass__define
+
+  void = {pointclass, $
+    x    : 0.D ,$
+    y    : 0.D ,$
+    z    : 0.D $
+  }
   
 End

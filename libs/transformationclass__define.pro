@@ -1,13 +1,3 @@
-Pro transformationclass__define
-
-  void = {transformationclass, $
-    matrix    : dblarr(4,4) ,$
-    invmatrix : dblarr(4,4)  $
-  }
-  
-End
-
-
 Function transformationclass::init, matrix, invmatrix
 
   Compile_opt idl2
@@ -854,4 +844,11 @@ End
 
  
 
-    
+Pro transformationclass__define
+
+  void = {transformationclass, $
+    matrix    : dblarr(4,4) ,$
+    invmatrix : dblarr(4,4)  $
+  }
+  
+End
