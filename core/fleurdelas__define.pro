@@ -3749,13 +3749,13 @@ Function fleurDeLas::dump, val, outputPath=outputPath
   self.out->print,1, 'Printing out ' + strcompress(string(nX)) + ' point structure into dump file...'
   
   if keyword_set(outputPath) then openw, lun, outputPath, /APPEND, /GET_LUN else $
-                                  openw, lun, './data/ascii_dump.csv', /APPEND, /GET_LUN
+                                  openw, lun, self.rootPath + self.sysSep + 'ascii_dump.csv', /APPEND, /GET_LUN
   
   nVal = n_elements(val)
   
   case nVal of
   
-  0: WRITE_CSV, './data/dump.csv', x, y, z
+  0: WRITE_CSV, self.rootPath + self.sysSep + 'dump.csv', x, y, z
   
   1: begin
     
