@@ -732,13 +732,9 @@ Pro fleurDeLas::cleanup
     command = 'rm -r '+ self.tempDirPath
   spawn, command
   endif else begin
-    command = 'del '+ self.tempDirPath
+    command = 'del /F /Q '+ self.tempDirPath
   spawn, command
   endelse
-  
-  
-  command = 'rm -r '+ self.tempDirPath
-  spawn, command
   
   
   ; Freeing all data member pointers
@@ -3748,14 +3744,14 @@ Function fleurDeLas::dump, val, outputPath=outputPath
   
   self.out->print,1, 'Printing out ' + strcompress(string(nX)) + ' point structure into dump file...'
   
-  if keyword_set(outputPath) then openw, lun, outputPath, /APPEND, /GET_LUN else $
-                                  openw, lun, self.rootPath + self.sysSep + 'ascii_dump.csv', /APPEND, /GET_LUN
+  if keyword_set(outputPath) then outputFile = outputPath else outputFile = self.rootPath + self.sysSep + 'ascii_dump.csv
+  openw, lun, outputFile, /APPEND, /GET_LUN
   
   nVal = n_elements(val)
   
   case nVal of
   
-  0: WRITE_CSV, self.rootPath + self.sysSep + 'dump.csv', x, y, z
+  0: WRITE_CSV, outputFile, x, y, z
   
   1: begin
     
