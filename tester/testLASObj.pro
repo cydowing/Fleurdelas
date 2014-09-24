@@ -25,6 +25,7 @@ lasobj = obj_new('fleurdelas')
 
 ; Loading the data from the MiltonKeynes.las file
 ; The input file can be a relative path to the IDL root path, or a fully qualified path
+
 lasobj.loadDataWithPath, inputFile = './data/MiltonKeynes.las'
 
 ; Get all the points that have been loaded into memory - for further manipulations

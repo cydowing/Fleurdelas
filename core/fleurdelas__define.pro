@@ -125,19 +125,32 @@ Pro fleurDeLas::loadDataWithPath, inputFile=inputFile, _ref_extra=logMode
   ; Initializing console printing
   self.out = obj_new('consoleOutput', _extra = logMode)
 
-
+  self.sysSep = PATH_SEP()
+  
   ; Setting up a temp directory to hold temporary informations
   ; cd into the project directory
-  fleurDeLasPath = FILE_DIRNAME(ROUTINE_FILEPATH())
-  CD, fleurDeLasPath
-  CD, '../'
-  spawn, 'pwd', rootPth
-  self.rootPath = rootPth
-  ; Create a temp file
-  tempDirPath = './temp/'
-  self.tempDirPath = tempDirPath
-  command = 'mkdir '+ tempDirPath
-  spawn, command
+  fleurdelasPath = File_dirname(Routine_filepath('fleurdelas__define', /either))
+  Cd, fleurdelasPath
+  Cd, '..'
+  
+  ; Adding some support for cross plateform compatibility
+  if strlowcase(!version.os_family) eq 'unix' then begin
+    Spawn, 'pwd', rootPth
+    self.Rootpath = rootPth
+    ; Create a temp file
+    tempDirPath = rootPth + self.sysSep + 'temp'
+    self.Tempdirpath = tempDirPath
+    command = 'mkdir '+ tempDirPath
+    Spawn, command
+  endif else begin
+    Spawn, 'cd', rootPth
+    self.Rootpath = rootPth
+    ; Create a temp file
+    tempDirPath = rootPth + self.sysSep + 'temp'
+    self.Tempdirpath = tempDirPath
+    command = 'mkdir '+ tempDirPath
+    Spawn, command
+  endelse
   
   dum = self.readLAS(inputFile, header, dataStr)
   
@@ -712,8 +725,18 @@ Pro fleurDeLas::cleanup
   ; Removing the temporary files
   self.out->print,1 , 'Destroying fleurDeLas object...'
   self.out->print,1 , 'Removing temporary files...'
-  CD, '~/IDLWorkspace83/Saints/'
+  CD, self.rootPath
   ; Removing a temp file
+  
+  if strlowcase(!version.os_family) eq 'unix' then begin
+    command = 'rm -r '+ self.tempDirPath
+  spawn, command
+  endif else begin
+    command = 'del '+ self.tempDirPath
+  spawn, command
+  endelse
+  
+  
   command = 'rm -r '+ self.tempDirPath
   spawn, command
   
@@ -3941,7 +3964,8 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
 
   ; Creating a temp file that hold ALL the VLR records
   ; XXX: will need to be changed we integrated to fleurDeLas using self.tempDirPath
-  openw, 2, './temp/vlrRecords.bin'
+  vlrFilePath = self.tempDirPath + self.sysSep + 'vlrRecords.bin'
+  openw, wLun, vlrFilePath, /GET_LUN
 
   ; Closing all lun(s) to avoid any issue
   close, 1
@@ -3954,8 +3978,8 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
   if header.nRecords ne 0 then begin
 
     InitVRLHeader, vrlStruct
-    openr, 1, inputFile, /swap_if_big_endian
-    point_lun, 1, header.headerSize
+    openr, rLun, inputFile, /swap_if_big_endian, /get_lun
+    point_lun, rLun, header.headerSize
 
     ; String array containing the file name of the temp VLR files
     vlrFileArr = strarr(header.nRecords)
@@ -3969,15 +3993,15 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
 
     for w=0,header.nRecords-1,1 do begin
 
-      outputFile = strcompress('./temp/vlr_0' + string(w) + '.gkey',/REMOVE_ALL)
+      outputFile = strcompress(self.tempDirPath + self.sysSep + 'vlr_0' + string(w) + '.gkey',/REMOVE_ALL)
       vlrFileArr[w] = outputFile
 
-      readu, 1, vrlStruct
-      writeu, 2, vrlStruct
+      readu, rLun, vrlStruct
+      writeu, wLun, vrlStruct
 
       ; Creating a temp file that hold the nth VLR record - one file per record
-      openw, 3, outputFile
-      writeu, 3, vrlStruct
+      openw, wwLun, outputFile, /get_lun
+      writeu, wwLun, vrlStruct
       vlrArr[w] = ptr_new(vrlStruct)
 
       case 1 of
@@ -3993,13 +4017,13 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
             digitizerGain:0.0D,$
             digitizerOffset:0.0D $
           }
-          readu, 1, wfDescriptor
+          readu, rLun, wfDescriptor
 
           waveDescriptor = wfDescriptor
 
 
-          writeu, 2, waveDescriptor
-          writeu, 3, waveDescriptor
+          writeu, wLun, waveDescriptor
+          writeu, wwLun, waveDescriptor
           vlrId[w] = 1
           vlrArr[w+1] = ptr_new(waveDescriptor)
 
@@ -4018,7 +4042,7 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
             wNumberOfKeys:0US$    ;TODO to update if we add fields in there
         }
 
-        readu,1,gkdTag
+        readu, rLun, gkdTag
         ;        print, "Number of geokey:",gkdTag.wNumberOfKeys
         geoKeyHeader = gkdTag
 
@@ -4030,14 +4054,14 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
       }
 
       tempKeyEntry = replicate(sKeyEntry, gkdTag.wNumberOfKeys)
-      readu,1,tempKeyEntry
+      readu, rLun,tempKeyEntry
 
       geoKeyArray = tempKeyEntry
 
-      writeu, 2, geoKeyHeader
-      writeu, 2, geoKeyArray
-      writeu, 3, geoKeyHeader
-      writeu, 3, geoKeyArray
+      writeu, wLun, geoKeyHeader
+      writeu, wLun, geoKeyArray
+      writeu, wwLun, geoKeyHeader
+      writeu, wwLun, geoKeyArray
       vlrId[w] = 2
       tempStruc = {header:gkdTag, key:tempKeyEntry}
       vlrArr[w+1] = ptr_new(tempStruc)
@@ -4048,11 +4072,11 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
     else: begin
 
       generic = bytarr(vrlStruct.recordLengthAfterHearder)
-      readu,1,generic
+      readu, rLun, generic
 
 
-      writeu, 2, generic
-      writeu, 3, generic
+      writeu, wLun, generic
+      writeu, wwLun, generic
       vlrId[w] = 3
       vlrArr[w+1] = ptr_new(generic)
 
@@ -4060,15 +4084,15 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
 
   endcase
 
-  point_lun, -3, endPos
-  close, 3
+  point_lun, -wwLun, endPos
+  close, wwLun
   vlrByteSizeArr[w] = endPos
 
 
 endfor
 
-close,1
-close, 2
+close, rLun
+close, wLun
 
 endif else begin
 
@@ -4358,8 +4382,10 @@ Pro fleurDeLas__define
   void = {fleurDeLas, $
     lasFilePath       : '',$                    ; String representing the path to the LAS file
     surveyDay         : '',$                    ; String holding the Julian Survey day - only with ARSF-NERC dataset
-    tempDirPath       : '',$                    ; String holding the temporary directory path to store temp file(s) if required
-    rootPath          : '',$                    ; String of the local path where the project is located - for relative path generation
+    tempDirPath       : '',$                    ; String holdinf the temporary directory path to store temp file(s) if required
+    rootPath          : '',$                    ; Path of the directory where the project is located
+    waveFileExt       : '',$                    ; Extention of the external waveform file, WPD | INW
+    sysSep            : '',$                    ; String of the local path where the project is located - for relative path generation
     lasHeader         : ptr_new(),$             ; Pointer to the header of the LAS file
     lasDataStr        : ptr_new(),$             ; Pointer to the Point data structure
     lasDataStrSz      : 0B,$                    ; Size in bytes of the point data structure
