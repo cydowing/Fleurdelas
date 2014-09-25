@@ -4368,6 +4368,20 @@ if lasHeader.versionMinor ge 3 then dum = a->setHeaderStartWaveform(lasHeader.st
 End
 
 
+; This function creates a 3D view of the loaded data
+Function fleurdelas::view, $
+                     DUMP = DUMP    ; To be implemented
+
+  pts = self.getXYZ()
+  xyz = Transpose( [ [pts[*,0]], [pts[*,1]], [pts[*,2]] ] )
+  rgb = Transpose(self.plotGetRGBValues())
+;  rgb = Transpose([[pts.R],[pts.G],[pts.B]])/256U
+  o = Idlgrpolygon(xyz, Style=0, Vert_Colors=rgb)
+  XObjView, o, TITLE='Fleurdelas Simple Viewer"
+
+End
+
+
 
 Pro fleurDeLas__define
 

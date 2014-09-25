@@ -60,4 +60,7 @@ dum = lasobj.dump()
 outputFile=FILE_DIRNAME(inputFile) + PATH_SEP() + 'MiltonKeynes_test.las'
 dum = lasobj.writelas(output = outputFile)
 
+; View the data in 3D
+dum = lasobj.view()
+
 End
