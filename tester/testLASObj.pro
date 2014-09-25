@@ -25,7 +25,15 @@ lasobj = obj_new('fleurdelas')
 
 ; Loading the data from the MiltonKeynes.las file
 ; The input file can be a relative path to the IDL root path, or a fully qualified path
-lasobj.loadDataWithPath, inputFile = './data/MiltonKeynes.las'
+rootPath = File_dirname(Routine_filepath('fleurdelas__define', /either))
+cd, rootPath
+cd, '..'
+
+if strlowcase(!version.os_family) eq 'unix' then Spawn, 'pwd', rootPth else Spawn, 'cd', rootPth
+
+inputFile = FILEPATH('MiltonKeynes.las', ROOT_DIR = rootPth, SUBDIRECTORY=['data'])
+
+lasobj.loadDataWithPath, inputFile = inputFile
 
 ; Get all the points that have been loaded into memory - for further manipulations
 ; Dum is an array of structure (of LAS point)
@@ -49,5 +57,10 @@ dum = lasobj.getData(boundingBox=[486492.218750D, 486419.937500D, 239796.812500D
 ; Dump the load data points (the ones from the last fleurdelas::getData() call) into an ascii file
 dum = lasobj.dump()
 
+outputFile=FILE_DIRNAME(inputFile) + PATH_SEP() + 'MiltonKeynes_test.las'
+dum = lasobj.writelas(output = outputFile)
+
+; View the data in 3D
+dum = lasobj.view()
 
 End
