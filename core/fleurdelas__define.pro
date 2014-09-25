@@ -122,6 +122,8 @@
 ;-
 Pro fleurDeLas::loadDataWithPath, inputFile=inputFile, _ref_extra=logMode
 
+  close, /ALL
+  
   ; Initializing console printing
   self.out = obj_new('consoleOutput', _extra = logMode)
 
@@ -712,7 +714,7 @@ Pro fleurDeLas::cleanup
   ; Removing the temporary files
   self.out->print,1 , 'Destroying fleurDeLas object...'
   self.out->print,1 , 'Removing temporary files...'
-  CD, '~/IDLWorkspace83/Saints/'
+  ;CD, '~/IDLWorkspace83/Saints/'
   ; Removing a temp file
   command = 'rm -r '+ self.tempDirPath
   spawn, command
@@ -3454,8 +3456,8 @@ End
 ;-
 Function fleurdelas::writeLAS, id = id, output = output, selected = selected
 
-  Close, 1
-  Openw, 1, output
+  Close, 100
+  Openw, 100, output
 
   self.Out->print, 1, "Writing the new file on the disk at " + Strcompress(String(output),/remove_all)
 
@@ -3514,9 +3516,9 @@ Function fleurdelas::writeLAS, id = id, output = output, selected = selected
   
   lasHeader = self->getHeaderProperty(/header)
 
-  Writeu, 1, lasHeader
+  Writeu, 100, lasHeader
   self.Out->print, 1, "Writing public header..."
-  Point_lun, -1, posHeader
+  Point_lun, -100, posHeader
   if posHeader eq lasHeader.Headersize then self.Out->print, 1,  "Public header successfully written..."
 
 
@@ -3524,7 +3526,7 @@ Function fleurdelas::writeLAS, id = id, output = output, selected = selected
   ; Open the corresponding file
   ; Read the file
   ; write the raw content into the new LAS file
-  self.Out->print, 1, "Writing Variable Length Records..."
+  self.Out->print, 100, "Writing Variable Length Records..."
   vlrFileID = self->getvlr(/vlrFileID)
   
   if vlrFileID ne !NULL then begin
@@ -3534,14 +3536,14 @@ Function fleurdelas::writeLAS, id = id, output = output, selected = selected
     wB = 0L
     posVlrArray = 0L
     for x=0, self.getHeaderProperty(/numberOfVLR)-1 do begin
-      Openr, 2, vlrFileID[x]
+      Openr, 102, vlrFileID[x]
       dum = Bytarr(vlrByteSize[x])
-      Readu, 2, dum
-      Point_lun, -2, r
+      Readu, 102, dum
+      Point_lun, -102, r
       rB += r
-      Close, 2
-      Writeu,1,dum
-      Point_lun, -1, w
+      Close, 102
+      Writeu,100,dum
+      Point_lun, -100, w
       if x eq 0 then begin
         wB += w-posHeader
       endif else begin
@@ -3571,15 +3573,15 @@ Function fleurdelas::writeLAS, id = id, output = output, selected = selected
     self.Out->print, 2, Strcompress(String(totalBytesWritten),/remove_all)+" bytes have been written so far, or the file header stipulates "+Strcompress(String(lasHeader.Dataoffset),/remove_all)+" bytes..."
     if lasHeader.Dataoffset-totalBytesWritten eq 2 then self.Out->print, 1, "The header is followed by 2 user-defined bytes..."
     self.Out->print, 2, "Moving "+Strcompress(String(lasHeader.Dataoffset-totalBytesWritten),/remove_all)+" bytes ahead..."
-    Point_lun, -1, actualPos
-    Point_lun, 1, actualPos + (lasHeader.Dataoffset-totalBytesWritten)
+    Point_lun, -100, actualPos
+    Point_lun, 100, actualPos + (lasHeader.Dataoffset-totalBytesWritten)
     self.Out->print, 2, "Done... resuming writting process..."
   endelse
 
   pointSize = self->getPointSize()
   theoriticalDataBlockSize = pointSize * lasHeader.Npoints
   ;print, theoriticalDataBlockSize
-  Point_lun, -1, posBeforeDataBlock
+  Point_lun, -100, posBeforeDataBlock
 
   self.Out->print, 1, "Writing points data records..."
 
@@ -3596,10 +3598,10 @@ Function fleurdelas::writeLAS, id = id, output = output, selected = selected
     endelse
   endelse
 
-  Writeu, 1, data
+  Writeu, 100, data
 
 
-  Point_lun, -1, posAfterDataBlock
+  Point_lun, -100, posAfterDataBlock
   byte7 = posAfterDataBlock-posBeforeDataBlock
 
   self.Out->print, 1, "Checking file integrity..."
@@ -3622,22 +3624,22 @@ Function fleurdelas::writeLAS, id = id, output = output, selected = selected
     self.Out->print, 1, "Size information of the Wave Packet: ", Size(waveformBlock)
 
     self.Out->print, 1, "Writing waveforms header (EVLR header)..."
-    Writeu, 1, waveformHeader
-    Point_lun, -1, posWaveformHeader
+    Writeu, 100, waveformHeader
+    Point_lun, -100, posWaveformHeader
     self.Out->print, 1, "Amount of bytes written for the waveform header: "+Strcompress(String(posWaveformHeader-posAfterDataBlock),/remove_all)
 
     self.Out->print, 1, "Writing waveforms header (EVLR header)..."
-    Writeu, 1, Byte(waveformBlock)
-    Point_lun, -1, posWaveformBlock
+    Writeu, 100, Byte(waveformBlock)
+    Point_lun, -100, posWaveformBlock
     self.Out->print, 1, "Amount of bytes written for the waveform block: "+Strcompress(String(posWaveformBlock-posWaveformHeader),/remove_all)
 
   endif
 
   self.Out->print, 1, "Finilizing the file..."
-  Free_lun, 1
+  Free_lun, 100
   self.Out->print, 1, "Done."
 
-  Close,1
+  Close, 100
   
   return, 1
 
@@ -3936,15 +3938,13 @@ End
 Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlrId ,vlrArr, obj
 
   ; Creating a binary file that will hold the VLR Records
-  ;CD, '~/IDLWorkspace83/Saints/'
-  close, 2
 
   ; Creating a temp file that hold ALL the VLR records
   ; XXX: will need to be changed we integrated to fleurDeLas using self.tempDirPath
-  openw, 2, './temp/vlrRecords.bin'
+  openw, 102, './temp/vlrRecords.bin'
 
   ; Closing all lun(s) to avoid any issue
-  close, 1
+  close, 100
 
 
   self.out->print,1, "Number of Variable Length Records: " + strcompress(string(fix(header.nRecords)))
@@ -3954,8 +3954,8 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
   if header.nRecords ne 0 then begin
 
     InitVRLHeader, vrlStruct
-    openr, 1, inputFile, /swap_if_big_endian
-    point_lun, 1, header.headerSize
+    openr, 100, inputFile, /swap_if_big_endian
+    point_lun, 100, header.headerSize
 
     ; String array containing the file name of the temp VLR files
     vlrFileArr = strarr(header.nRecords)
@@ -3972,12 +3972,12 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
       outputFile = strcompress('./temp/vlr_0' + string(w) + '.gkey',/REMOVE_ALL)
       vlrFileArr[w] = outputFile
 
-      readu, 1, vrlStruct
-      writeu, 2, vrlStruct
+      readu, 100, vrlStruct
+      writeu, 102, vrlStruct
 
       ; Creating a temp file that hold the nth VLR record - one file per record
-      openw, 3, outputFile
-      writeu, 3, vrlStruct
+      openw, 103, outputFile
+      writeu, 103, vrlStruct
       vlrArr[w] = ptr_new(vrlStruct)
 
       case 1 of
@@ -3993,13 +3993,13 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
             digitizerGain:0.0D,$
             digitizerOffset:0.0D $
           }
-          readu, 1, wfDescriptor
+          readu, 100, wfDescriptor
 
           waveDescriptor = wfDescriptor
 
 
-          writeu, 2, waveDescriptor
-          writeu, 3, waveDescriptor
+          writeu, 102, waveDescriptor
+          writeu, 103, waveDescriptor
           vlrId[w] = 1
           vlrArr[w+1] = ptr_new(waveDescriptor)
 
@@ -4018,7 +4018,7 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
             wNumberOfKeys:0US$    ;TODO to update if we add fields in there
         }
 
-        readu,1,gkdTag
+        readu,100,gkdTag
         ;        print, "Number of geokey:",gkdTag.wNumberOfKeys
         geoKeyHeader = gkdTag
 
@@ -4030,14 +4030,14 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
       }
 
       tempKeyEntry = replicate(sKeyEntry, gkdTag.wNumberOfKeys)
-      readu,1,tempKeyEntry
+      readu, 100, tempKeyEntry
 
       geoKeyArray = tempKeyEntry
 
-      writeu, 2, geoKeyHeader
-      writeu, 2, geoKeyArray
-      writeu, 3, geoKeyHeader
-      writeu, 3, geoKeyArray
+      writeu, 102, geoKeyHeader
+      writeu, 102, geoKeyArray
+      writeu, 103, geoKeyHeader
+      writeu, 103, geoKeyArray
       vlrId[w] = 2
       tempStruc = {header:gkdTag, key:tempKeyEntry}
       vlrArr[w+1] = ptr_new(tempStruc)
@@ -4048,11 +4048,11 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
     else: begin
 
       generic = bytarr(vrlStruct.recordLengthAfterHearder)
-      readu,1,generic
+      readu, 100,generic
 
 
-      writeu, 2, generic
-      writeu, 3, generic
+      writeu, 102, generic
+      writeu, 103, generic
       vlrId[w] = 3
       vlrArr[w+1] = ptr_new(generic)
 
@@ -4060,15 +4060,15 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
 
   endcase
 
-  point_lun, -3, endPos
-  close, 3
+  point_lun, -103, endPos
+  close, 103
   vlrByteSizeArr[w] = endPos
 
 
 endfor
 
-close,1
-close, 2
+close, 100
+close, 102
 
 endif else begin
 
