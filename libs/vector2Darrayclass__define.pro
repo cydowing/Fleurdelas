@@ -2,66 +2,14 @@
 ; To be revisited for a better handle or initialisation
 ; possibility to initialize directly with a vector2Darrayclass argument
 ;-
-Function vector2Darrayclass::init, cox, coy, coz
+Function vector2Darrayclass::init, cox, coy
 
   Compile_opt idl2
 
-  case n_params() of
-    0 : begin
-          self.pt = ptr_new(/allocate_heap)
-          self.column = 0
-          self.row = 0
-        end
-    1 : begin
-          if strlowcase(obj_class(cox)) ne 'vector2Darrayclass' then begin
-            ; checking if it a matrix
-            tempSize = size(cox,/dimensions)
-            if n_elements(tempSize) eq 1 then begin
-              print, 'Wrong size of input data...'
-              print, 'Make sure that one of the dimension is 3...'
-              return, 0
-            endif else begin
-            dum = where(size(cox,/dimensions) eq 3, count, complement = comp)
-            if count eq 0 then begin
-              print, 'Wrong size of input data...'
-              print, 'Make sure that one of the dimension is 3...'
-              return, 0
-            endif else begin
-              if dum[0] eq 0 then begin
-                self.pt = ptr_new(transpose(cox))
-                self.column = dum[1]
-                self.row = dum[0]
-              endif else begin
-                self.pt = ptr_new(cox)
-                self.column = dum[0]
-                self.row = dum[1]
-              endelse
-            endelse
-          endelse
-         endif else begin
-          dim = size(cox.xyz(), /dimensions)
-          self.pt = ptr_new( cox.xyz() )
-          self.column = dim[0]
-          self.row = dim[1]
-         endelse
-        end
-        
-    3 : begin
-          if (size(cox,/dimensions))[0] ne (size(coy,/dimensions))[0] or $
-             (size(cox,/dimensions))[0] ne (size(coz,/dimensions))[0] then begin
-             print, 'Wrong size of input data...'
-             return, 0
-          endif else begin
-             ; It is the user duty to provid columns major array coordinates
-             self.pt = ptr_new( [[cox],[coy],[coz]] )
-             self.column = (size(cox,/dimensions))[0]
-             self.row = 3
-          endelse
-        end
-    else : print, 'Wrong number of elements for initialization...'
-  
-  endcase
-  
+ self.pt = ptr_new( [[cox],[coy]] )
+ self.column = (size(cox,/dimensions))[0]
+ self.row = 2
+
   ; Initializing the object
   return, 1
   
