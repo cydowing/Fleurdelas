@@ -63,10 +63,10 @@ case 1 of
       north   : 0L,  $            ; Y data
       elev    : 0L,  $            ; Z data
       inten   : 0US, $            ; Intensity
-      nReturn : bytarr(16),  $    ; same as above but with more bits, 16 bits instead of 8 bits
+      nReturn : bytarr(2),  $    ; same as above but with more bits, 16 bits instead of 8 bits
       class   : 0B,  $            ; Classification
-      angle   : 0B,  $            ; Scan angle
-      user    : 0B,  $            ; User data
+      user    : 0B,  $            ; Scan angle
+      angle   : 0S,  $            ; User data
       source  : 0US, $            ; Point source ID
       time    : 0.0D $            ; GPS time (mandatory)
     }
@@ -87,7 +87,10 @@ if pointFormat eq 3 then pData = {format3, inherits format0, time:0.0D, R:0US, G
 
 if pointFormat eq 4 then pData = {format4, inherits format0, time:0.0D, wDescriptorIndex:0B, offsetWaveData:0ULL, wPacketSize:0UL, returnPointWaveLocation:0.0, X:0.0, Y:0.0, Z:0.0 }
 
-if pointFormat eq 5 then pData = {format5, inherits format3, wDescriptorIndex:0B, offsetWaveData:0ULL, wPacketSize:0UL, returnPointWaveLocation:0.0, X:0.0, Y:0.0, Z:0.0 }
+if pointFormat eq 5 then begin
+  dum = {format3, inherits format0, time:0.0D, R:0US, G:0US, B:0US}    ; GPS time field & RGB channels values
+  pData = {format5, inherits format3, wDescriptorIndex:0B, offsetWaveData:0ULL, wPacketSize:0UL, returnPointWaveLocation:0.0, X:0.0, Y:0.0, Z:0.0 }
+endif
 
 if pointFormat eq 6 then pData = {format6, inherits format0}
 
@@ -97,6 +100,9 @@ if pointFormat eq 8 then pData = {format8, inherits format0, R:0US, G:0US, B:0US
 
 if pointFormat eq 9 then pData = {format9, inherits format0, wDescriptorIndex:0B, offsetWaveData:0ULL, wPacketSize:0UL, returnPointWaveLocation:0.0, X:0.0, Y:0.0, Z:0.0 }
 
-if pointFormat eq 10 then pData = {format10, inherits format8, wDescriptorIndex:0B, offsetWaveData:0ULL, wPacketSize:0UL, returnPointWaveLocation:0.0, X:0.0, Y:0.0, Z:0.0 }
+if pointFormat eq 10 then begin
+  dum = {format8, inherits format0, R:0US, G:0US, B:0US, NIR:0US }    ; RGB+NIR channels values
+  pData = {format10, inherits format8, wDescriptorIndex:0UB, offsetWaveData:0ULL, wPacketSize:0UL, returnPointWaveLocation:0.0, X:0.0, Y:0.0, Z:0.0 }
+endif
 
 end
