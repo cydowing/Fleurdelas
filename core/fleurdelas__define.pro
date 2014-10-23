@@ -3972,14 +3972,12 @@ End
 Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlrId ,vlrArr, obj
 
   ; Creating a binary file that will hold the VLR Records
-
   
 
   ; Creating a temp file that hold ALL the VLR records
   ; XXX: will need to be changed we integrated to fleurDeLas using self.tempDirPath
   vlrFilePath = self.tempDirPath + self.sysSep + 'vlrRecords.bin'
   openw, wLun, vlrFilePath, /GET_LUN
-
 
 
 
@@ -3992,7 +3990,6 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
     InitVRLHeader, vrlStruct
     openr, rLun, inputFile, /swap_if_big_endian, /get_lun
     point_lun, rLun, header.headerSize
-
 
     ; String array containing the file name of the temp VLR files
     vlrFileArr = strarr(header.nRecords)
@@ -4009,19 +4006,79 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
       outputFile = strcompress(self.tempDirPath + self.sysSep + 'vlr_0' + string(w) + '.gkey',/REMOVE_ALL)
       vlrFileArr[w] = outputFile
 
-
       readu, rLun, vrlStruct
       writeu, wLun, vrlStruct
 
       ; Creating a temp file that hold the nth VLR record - one file per record
       openw, wwLun, outputFile, /get_lun
       writeu, wwLun, vrlStruct
-
       vlrArr[w] = ptr_new(vrlStruct)
 
       case 1 of
+        
+        ; Extra-bytes record
+        (vrlStruct.recordID eq 4): begin
+          
+          self.out->print,1, "Extra-bytes descriptor found"
+          
+          ; Determine the number of Extra-Bytes payload
+          nEB = vrlStruct.RECORDLENGTHAFTERHEARDER / 192
+          
+          extra_bytes = ORDEREDHASH()
+;          key = ["Amplitude","Reflectance","Deviation"]
+          
+          for ii = 0, nEB-1 do begin
+            
+            ; has read the VLR header, needs to read out the data_type to know the type
+            ; getting the actual position in the file
+            point_lun, -rLun, startPosEB
+            ; moving to bytes ahead
+            point_lun, rLun, startPosEB + 2
+            ; reading the data_type byte
+            data_type = 0UB
+            options = 0UB
+            readu, rLun, data_type, options
+            ; creating the hash table and convert it a structure
+            extra_bytes_structure = self.extraBytesMakeStructure(data_type, options)
+            ; moving back 4 bytes
+            point_lun, rLun, startPosEB
+            ; reading the extra-bytes structure
+            readu, rLun, extra_bytes_structure
 
-        (vrlStruct.recordID ge 100) and (vrlStruct.recordID lt 356): begin
+;            extra_bytes[extra_bytes_structure.name] = self.extraBytesDataType(data_type, options)
+            extra_bytes[strcompress(string(extra_bytes_structure.name),/remove_all)] = self.extraBytesDataType(data_type, options)
+            
+            if ii eq 0 then concatEB = extra_bytes_structure else concatEB = [concatEB, extra_bytes_structure]
+
+          endfor
+          
+          
+          ; Convert hash to structure and create the new point data structure
+          dum = self.extraBytesNewPointDataStructure(extra_bytes)
+;          added_bytes = extra_bytes.ToStruct()
+;          void = {newDataPoint, inherits *(self.lasDataStr), inherits added_bytes}
+;          self.lasDataStr = ptr_new(void)
+          
+          writeu, wLun, concatEB
+          writeu, wwLun, concatEB
+          vlrId[w] = 1
+          vlrArr[w+1] = ptr_new(concatEB)
+          
+          ; Changing self.lasDataStr structure accordingly
+          ; Changing self.lasDataStrSz accordingly
+        
+        end
+        
+        
+        (vrlStruct.recordID eq 7): begin
+          self.out->print,1, "Superseded descriptor found"
+        
+        
+        End
+        
+        
+        
+        (vrlStruct.recordID ge 100) and (vrlStruct.recordID le 355): begin
           self.out->print,1, "Waveform packet descriptor found"
 
           wfDescriptor = {$
@@ -4032,16 +4089,13 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
             digitizerGain:0.0D,$
             digitizerOffset:0.0D $
           }
-
           readu, rLun, wfDescriptor
-
 
           waveDescriptor = wfDescriptor
 
 
           writeu, wLun, waveDescriptor
           writeu, wwLun, waveDescriptor
-
           vlrId[w] = 1
           vlrArr[w+1] = ptr_new(waveDescriptor)
 
@@ -4060,9 +4114,7 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
             wNumberOfKeys:0US$    ;TODO to update if we add fields in there
         }
 
-
         readu, rLun, gkdTag
-
         ;        print, "Number of geokey:",gkdTag.wNumberOfKeys
         geoKeyHeader = gkdTag
 
@@ -4082,7 +4134,6 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
       writeu, wLun, geoKeyArray
       writeu, wwLun, geoKeyHeader
       writeu, wwLun, geoKeyArray
-
       vlrId[w] = 2
       tempStruc = {header:gkdTag, key:tempKeyEntry}
       vlrArr[w+1] = ptr_new(tempStruc)
@@ -4092,21 +4143,21 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
 
     else: begin
 
-      generic = bytarr(vrlStruct.recordLengthAfterHearder)
+      if vrlStruct.recordLengthAfterHearder ne 0 then begin
+        generic = bytarr(vrlStruct.recordLengthAfterHearder)
+        readu, rLun, generic
 
-      readu, rLun, generic
 
+        writeu, wLun, generic
+        writeu, wwLun, generic
+        vlrId[w] = 3
+        vlrArr[w+1] = ptr_new(generic)
+      endif
 
-      writeu, wLun, generic
-      writeu, wwLun, generic
-
-      vlrId[w] = 3
-      vlrArr[w+1] = ptr_new(generic)
 
     end
 
   endcase
-
 
   point_lun, -wwLun, endPos
   free_lun, wwLun
@@ -4115,10 +4166,8 @@ Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
 
 endfor
 
-
 free_lun, rLun
 free_lun, wLun
-
 
 endif else begin
 
@@ -4131,6 +4180,7 @@ endif else begin
 endelse
 
 End
+
 
 
 
@@ -4413,6 +4463,112 @@ Function fleurdelas::view, $
   XObjView, o, TITLE='Fleurdelas Simple Viewer"
 
 End
+
+
+
+Function fleurdelas::extraBytesMakeStructure, data_type, options
+
+  compile_opt idl2
+
+  keys = ['reserved','data_type','options','name','unused','no_data','min','max','scale','offset','description']
+  extra_bytes_hash = Orderedhash()
+
+  ;extra_bytes_hash[keys[0]] = bytarr(2)
+  ;extra_bytes_hash[keys[1]] = 0UB
+  ;extra_bytes_hash[keys[2]] = 0UB
+  ;extra_bytes_hash[keys[3]] = bytarr(32)
+  ;extra_bytes_hash[keys[4]] = bytarr(4)
+  ;extra_bytes_hash[keys[5]] = self.extraBytesDataType(data_type, options)
+  ;extra_bytes_hash[keys[6]] = self.extraBytesDataType(data_type, options)
+  ;extra_bytes_hash[keys[7]] = self.extraBytesDataType(data_type, options)
+  ;extra_bytes_hash[keys[8]] = dblarr(3)
+  ;extra_bytes_hash[keys[9]] = dblarr(3)
+  ;extra_bytes_hash[keys[10]] = bytarr(32)
+
+  ; For now we just consider everything as 2 bytes array will look at uppercasting later
+  extra_bytes_hash[keys[0]] = Bytarr(2)
+  extra_bytes_hash[keys[1]] = 0UB
+  extra_bytes_hash[keys[2]] = 0UB
+  extra_bytes_hash[keys[3]] = Bytarr(32)
+  extra_bytes_hash[keys[4]] = Bytarr(4)
+  extra_bytes_hash[keys[5]] = Bytarr(24)
+  extra_bytes_hash[keys[6]] = Bytarr(24)
+  extra_bytes_hash[keys[7]] = Bytarr(24)
+  extra_bytes_hash[keys[8]] = Dblarr(3)
+  extra_bytes_hash[keys[9]] = Dblarr(3)
+  extra_bytes_hash[keys[10]] = Bytarr(32)
+
+  ; Convert hash to structure and returning the structure
+  Return, extra_bytes_hash.ToStruct()
+
+end
+
+
+
+Function fleurdelas::extraBytesDataType, data_type, options
+
+  compile_opt idl2
+
+  Case data_type of
+    0:
+    1:  data =  0UB         ; 1 byte
+    2:  data =  0B          ; 1 byte
+    3:  data =  0US         ; 2 bytes
+    4:  data =  0S          ; 2 bytes
+    5:  data =  0UL         ; 4 bytes
+    6:  data =  0L          ; 4 bytes
+    7:  data =  0ULL        ; 8 bytes
+    8:  data =  0LL         ; 8 bytes
+    9:  data =  0.0         ; 4 bytes
+    10: data =  0.0D        ; 8 bytes
+    11: data =  Bytarr(2)   ; 2 bytes
+    12: data =  Bytarr(2)
+    13: data =  Intarr(2)
+    14: data =  Uintarr(2)
+    15: data =  Ulonarr(2)
+    16: data =  Lonarr(2)
+    17: data =  Ulon64arr(2)
+    18: data =  Lon64arr(2)
+    19: data =  Fltarr(2)
+    20: data =  Dblarr(2)
+    21: data =  Bytarr(3)    ; 3 bytes
+    22: data =  Bytarr(3)
+    23: data =  Intarr(3)
+    24: data =  Uintarr(3)
+    25: data =  Ulonarr(3)
+    26: data =  Lonarr(3)
+    27: data =  Ulon64arr(3)
+    28: data =  Lon64arr(3)
+    29: data =  Fltarr(3)
+    30: data =  Dblarr(3)
+    ELSE:
+  Endcase
+
+  Return, data
+
+
+End
+
+
+
+Function fleurdelas::extraBytesNewPointDataStructure, added_bytes
+
+  basePoint = Orderedhash()
+
+  for i=0, N_tags(*(self.Lasdatastr))-1 do begin
+
+    basePoint[(Tag_names(*(self.Lasdatastr)))[i]] = (*(self.Lasdatastr)).(i)
+
+  endfor
+
+  newPoint = basePoint + added_bytes
+
+  self.Lasdatastr = Ptr_new(newPoint.toStruct())
+
+  Return, 1
+
+End
+
 
 
 
