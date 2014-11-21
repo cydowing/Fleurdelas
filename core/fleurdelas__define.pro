@@ -1252,201 +1252,331 @@ End
 ;     If n=0 then all the fields are return.
 ;
 ;-  
-Function fleurDeLas::getData, boundingBox=b, max=max, min=min, pointNumber=v, all=all, _ref_extra=ex
+Function fleurdelas::getData, BOUNDINGBOX = B, POINTNUMBER=V, ALL=ALL, $
+                              XBOUND = XBOUND, YBOUND = YBOUND, ZBOUND = ZBOUND, $
+                              MAX = MAX, MIN = MIN, $
+                              _REF_EXTRA=EX
+                              
+  ; start time
+  T = Systime(1)
 
-; start time
-T = SYSTIME(1)
-
-   openr, getDataLun, self.lasFilePath, /get_lun, /swap_if_big_endian
+;  Openr, getDataLun, self.Lasfilepath, /get_lun, /swap_if_big_endian
+  
+  if ptr_valid(self.lasdata) then begin
     
-    if n_elements(b) ne 0 then begin
+    tempData = self.getXYZ()
+    tempDataStr = *(self.lasdata)
     
-    self.out->print,1, "Reading the data into memory..."
+  endif else begin
     
     ; Retriving the data packet
-    ;openr, getDataLun, self.lasFilePath, /get_lun, /swap_if_big_endian
-    tempDataStr = replicate(*(self).lasDataStr, (*(self.lasHeader)).nPoints)
-    point_lun, getDataLun, (*(self.lasHeader)).dataOffset
-    readu, getDataLun, tempDataStr
-    ;close, getDataLun
-    tempData = fltarr((*(self.lasHeader)).nPoints,3)
-    tempData[*,0] = (tempDataStr.east * (*(self.lasHeader)).xscale) + (*(self.lasHeader)).xoffset
-    tempData[*,1] = (tempDataStr.north * (*(self.lasHeader)).yscale) + (*(self.lasHeader)).yoffset
-    tempData[*,2] = (tempDataStr.elev * (*(self.lasHeader)).zscale) + (*(self.lasHeader)).zoffset
-    
-       ; checking the that boundingBox is correct and determine which bounding box type is it: geographic or elevation
-       if (n_elements(b) eq 4) or (n_elements(b) eq 2) or (n_elements(b) eq 1) then begin
-    
-        case n_elements(b) of
-          4:begin
-          
-            self.out->print,1,"Filtering data by coordinates..."           
-            
-            ; setting object data extent
-            self.lasDataExtent = b
-            
-            index = where((tempData[*,0] le b[0]) and (tempData[*,0] ge b[1]) and $
-                          (tempData[*,1] le b[2]) and (tempData[*,1] ge b[3]), indexCount)
-            
-            if indexCount ne 0 then data = self->lasPointFieldSelector(tempDataStr(index), _ref_extra=ex, self.out) else data = 0
-            
-            if (size(data))[2] ne 8 then $
-              self.out->print,2, "Nothing return !" else $
-              self.out->print,1, strcompress("Number of point record(s) returned: "+string(indexCount))
-    
-              self.out->print,1, strcompress("Time :"+string(SYSTIME(1) - T) +' Seconds')    
-            
-            end
-          
-          2:begin
-          
-            self.out->print,1, "Filtering data by heights..."
-            
-            index = where((tempData[*,2] le b[0]) and (tempData[*,2] ge b[1]), indexCount)
-            
-            if indexCount ne 0 then data = self->lasPointFieldSelector(tempDataStr(index), _ref_extra=ex, self.out) else data = 0
-            
-            if (size(data))[2] ne 8 then $
-              self.out->print,2, "Nothing return !" else $
-              self.out->print,1, strcompress("Number of point record(s) returned: "+string(indexCount))
-              
-            self.out->print,1, strcompress("Time :"+string(SYSTIME(1) - T) +' Seconds') 
-          
-          end
-          
-          1:Begin
-          
-            if keyword_set(max) then begin
-            
-              index = where((tempData[*,2] le b[0]), indexCount)
-            
-              if indexCount ne 0 then data = self->lasPointFieldSelector(tempDataStr(index), _ref_extra=ex, self.out) else data = 0
-              
-              if (size(data))[2] ne 8 then $
-              self.out->print,2, "Nothing return !" else $
-              self.out->print,1, strcompress("Number of point record(s) returned: "+string(indexCount))
+    openr, getDataLun, self.lasFilePath, /get_lun, /swap_if_big_endian
+    tempDataStr = Replicate(*(self).Lasdatastr, (*(self.Lasheader)).Npoints)
+    Point_lun, getDataLun, (*(self.Lasheader)).Dataoffset
+    Readu, getDataLun, tempDataStr
+    close, getDataLun
       
-              self.out->print,1, strcompress("Time :"+string(SYSTIME(1) - T) +' Seconds')
-              
-            endif else begin
-            
-            if keyword_set(min) then begin
-            
-              index = where((tempData[*,2] ge b[0]), indexCount)
-            
-              if indexCount ne 0 then data = self->lasPointFieldSelector(tempDataStr(index), _ref_extra=ex, self.out) else data = 0
-              
-              if (size(data))[2] ne 8 then $
-              self.out->print,2, "Nothing return !" else $
-              self.out->print,1, strcompress("Number of point record(s) returned: "+string(indexCount))
-      
-              self.out->print,1, strcompress("Time :"+string(SYSTIME(1) - T) +' Seconds')
-              
-              endif
-              
-             endelse
-          
-          end
-    
-        endcase 
-        
-        endif else begin
-          free_lun, getDataLun, /FORCE
-          return, 0
-        endelse
-        
-        tempData = 0
-        
-    endif;
+  endelse
 
-    ; pointNumber parameter set -> returning one point selected by it number
-    if n_elements(v) eq 1 then begin
+  if N_elements(b) ne 0 then begin
 
-    tempData = assoc(getDataLun, *(self).lasDataStr, (*(self.lasHeader)).dataOffset , /packed)
-    data = self->lasPointFieldSelector((tempData[v]), _ref_extra=ex, self.out)
-    index = v
+    self.Out->print,1, "Reading the data into memory..."
     
-    ;self->loadWave
-    
-    self.out->print,1, strcompress("Time :"+string(SYSTIME(1) - T) +' Seconds')
-    
-    endif
-    
-    ; pointNumber parameter set to interval [lowerLimit,upperLimit] -> returning the points within the interval
-    if n_elements(v) eq 2 then begin
-    
-    numbElements = v[1] - v[0]
+    tempData = Fltarr((*(self.Lasheader)).Npoints,3)
+    tempData[*,0] = (tempDataStr.East * (*(self.Lasheader)).Xscale) + (*(self.Lasheader)).Xoffset
+    tempData[*,1] = (tempDataStr.North * (*(self.Lasheader)).Yscale) + (*(self.Lasheader)).Yoffset
+    tempData[*,2] = (tempDataStr.Elev * (*(self.Lasheader)).Zscale) + (*(self.Lasheader)).Zoffset
       
-      index = lindgen(numbElements) + v[0]
-      
-      tempdum = self->getData(/all)
-      dum = tempdum[index]
-      ;print, dum
-      data = self->lasPointFieldSelector(dum, _ref_extra=ex, self.out)
-      
-      self.out->print,1, strcompress("Number of point record(s) returned: "+string(numbElements))
-      self.out->print,1, strcompress("Time :"+string(SYSTIME(1) - T) +' Seconds')
-      
-    endif
-    
-    ; pointNumber parameter set to an index array [index_array] -> returning the points corresponding to the index
-    if n_elements(v) gt 2 then begin
-    
-    numbElements = n_elements(v)
+    ; checking the that boundingBox is correct and determine which bounding box type is it: geographic or elevation
+    if (N_elements(b) eq 6) or (N_elements(b) eq 4) or (N_elements(b) eq 2) or (N_elements(b) eq 1) then begin
 
-      ; Much more efficient way to retreive points via INDEX array
-      ;A = ASSOC(getDataLun, *(self).lasDataStr, (*(self.lasHeader)).dataOffset) 
-      tempdum = self->getData(/all)
-      dum = tempdum[v]
-      ;print, dum
-      
-      ;print, 'n elements: ', n_elements(dum)
-      data = self->lasPointFieldSelector(dum, _ref_extra=ex, self.out)
-      
-      index = v
-      
-      self.out->print,1, strcompress("Number of point record(s) returned: "+string(numbElements))
-      self.out->print,1, strcompress("Time :"+string(SYSTIME(1) - T) +' Seconds')
-      
-    endif
-      
-        
+      case N_elements(b) of
+        6:begin
+
+          self.Out->print,1,"Filtering data by coordinates..."
   
-    ; keyword /all set -> returning all the points of the LAS file
-    if keyword_set(all) then begin
+          ; setting object data extent
+          self.Lasdataextent = double(b[0:3])
   
-      self.out->print,1,"Formating data..."
+          index = Where((tempData[*,0] le b[0]) and (tempData[*,0] ge b[1]) and $
+                        (tempData[*,1] le b[2]) and (tempData[*,1] ge b[3]) and $
+                        (tempData[*,2] le b[4]) and (tempData[*,2] ge b[5]), indexCount)
+  
+          if indexCount ne 0 then data = self->lasPointFieldSelector(tempDataStr(index)) else data = 0
+  
+          if (Size(data))[2] ne 8 then $
+            self.Out->print,2, "Nothing return !" else $
+            self.Out->print,1, Strcompress("Number of point record(s) returned: "+String(indexCount))
+  
+          self.Out->print,1, Strcompress("Time :"+String(Systime(1) - T) +' Seconds')
 
-      ; Retriving the data packet
-      ;openr, getDataLun, self.lasFilePath, /get_lun, /swap_if_big_endian
-      tempDataStr = replicate(*(self).lasDataStr, (*(self.lasHeader)).nPoints)
-      point_lun, getDataLun, (*(self.lasHeader)).dataOffset
-      readu, getDataLun, tempDataStr
-    
-      ;data = self->lasPointFieldSelector(tempDataStr, _ref_extra=ex, self.out)
-      data=tempDataStr
+        end
       
-      index = lindgen((*(self.lasHeader)).nPoints)
+        4:begin
 
-      if (size(data))[2] ne 8 then $
-              self.out->print,2,"Nothing return !" else $
-              self.out->print,1,strcompress("Number of point record(s) returned: " + string((*(self.lasHeader)).nPoints))
+        self.Out->print,1,"Filtering data by coordinates..."
 
-      self.out->print,1, strcompress("Time :"+string(SYSTIME(1) - T) +' Seconds')  
+        ; setting object data extent
+        self.Lasdataextent = b
 
-    endif
+        index = Where((tempData[*,0] le b[0]) and (tempData[*,0] ge b[1]) and $
+          (tempData[*,1] le b[2]) and (tempData[*,1] ge b[3]), indexCount)
+
+        if indexCount ne 0 then data = self->lasPointFieldSelector(tempDataStr(index)) else data = 0
+
+        if (Size(data))[2] ne 8 then $
+          self.Out->print,2, "Nothing return !" else $
+          self.Out->print,1, Strcompress("Number of point record(s) returned: "+String(indexCount))
+
+        self.Out->print,1, Strcompress("Time :"+String(Systime(1) - T) +' Seconds')
+
+      end
+
+      2:begin
+      
+      case 1 of
+        ; If XBOUND is set => keeping all points between these two values
+        Keyword_set(XBOUND): begin
+
+          self.Out->print, 1,"Filtering data by X/Easting dimension..."
+          index = Where((tempData[*,0] le B[1]) and (tempData[*,0] ge B[0]), $
+            indexCount, /NULL)
+          if index ne !NULL then data = tempDataStr[index] else data = !NULL
+
+        end
+        ; If YBOUND is set => keeping all points between these two values
+        Keyword_set(YBOUND): begin
+
+          self.Out->print, 1,"Filtering data by Y/Northing dimension..."
+          index = Where((tempData[*,1] le B[1]) and (tempData[*,1] ge B[0]), $
+            indexCount, /NULL)
+          if index ne !NULL then data = tempDataStr[index] else data = !NULL
+
+        end
+        ; If ZBOUND is set => keeping all points between these two values
+        Keyword_set(ZBOUND): begin
+
+          self.Out->print, 1,"Filtering data by Z/Height dimension..."
+          index = Where((tempData[*,2] le B[1]) and (tempData[*,2] ge B[0]), $
+            indexCount, /NULL)
+          if index ne !NULL then data = tempDataStr[index] else data = !NULL
+
+        end
+        ; If no associated keyword is set, then the altitude is considered and
+        ; all the points lying within the two altitude are kept
+        ELSE: begin
+
+          self.Out->print, 1,"No Keyword set -> Filtering data by Z/Height dimension..."
+          index = Where((tempData[*,2] le B[1]) and (tempData[*,2] ge B[0]), $
+            indexCount, /NULL)
+          if index ne !NULL then data = tempDataStr[index] else data = !NULL
+
+        end
+
+      endcase
+      
+;      if indexCount ne 0 then data = self->lasPointFieldSelector(tempDataStr(index)) else data = 0
+
+      if (Size(data))[2] ne 8 then $
+        self.Out->print,2, "Nothing return !" else $
+        self.Out->print,1, Strcompress("Number of point record(s) returned: "+String(indexCount))
+
+      self.Out->print,1, Strcompress("Time :"+String(Systime(1) - T) +' Seconds')
+
+
+    end
+
+    1:Begin
+
+    if Keyword_set(max) then begin
+
+      ;print, "Not scale and translate value:", ((b[0] - (*(self.lasHeader)).zoffset) / (*(self.lasHeader)).zscale)
+
+      index = Where((tempData[*,2] le b[0]), indexCount)
+
+      if indexCount ne 0 then data = self->lasPointFieldSelector(tempDataStr(index)) else data = 0
+
+      if (Size(data))[2] ne 8 then $
+        self.Out->print,2, "Nothing return !" else $
+        self.Out->print,1, Strcompress("Number of point record(s) returned: "+String(indexCount))
+
+      self.Out->print,1, Strcompress("Time :"+String(Systime(1) - T) +' Seconds')
+
+    endif else begin
+
+      if Keyword_set(min) then begin
+
+        index = Where((tempData[*,2] ge b[0]), indexCount)
+
+        if indexCount ne 0 then data = self->lasPointFieldSelector(tempDataStr(index)) else data = 0
+
+        if (Size(data))[2] ne 8 then $
+          self.Out->print,2, "Nothing return !" else $
+          self.Out->print,1, Strcompress("Number of point record(s) returned: "+String(indexCount))
+
+        self.Out->print,1, Strcompress("Time :"+String(Systime(1) - T) +' Seconds')
+
+      endif
+
+    endelse
+
+  end
+
+endcase
+
+endif else begin
+  Free_lun, getDataLun, /FORCE
+  Return, 0
+endelse
+
+tempData = 0
+
+endif;
+
+; pointNumber parameter set -> returning one point selected by it number
+if N_elements(v) eq 1 then begin
+
+  if ptr_valid(self.lasdata) eq 0 then begin
     
+    Openr, getDataLun, self.Lasfilepath, /get_lun, /swap_if_big_endian
+    tempData = Assoc(getDataLun, *(self).Lasdatastr, (*(self.Lasheader)).dataOffset , /packed)
+    free_lun, getDataLun
+    
+  endif else tempData = (*(self.lasdata))[v]
+  ;    print, 'data once read: ', (tempData[v]).time
+  data = self->lasPointFieldSelector( tempData )
+
+  index = v
+
+  ;self->loadWave
+
+  self.Out->print,1, Strcompress("Time :"+String(Systime(1) - T) +' Seconds')
+
+endif
+
+; pointNumber parameter set to interval [lowerLimit,upperLimit] -> returning the points within the interval
+if N_elements(v) eq 2 then begin
+
+  numbElements = v[1] - v[0]
+  ;
+  ;      tempData = replicate(*(self).lasDataStr, numbElements)
+  ;      print, 'pointer position: ' ,( (*(self.lasHeader)).dataOffset + (long(self.lasDataStrSz) * long(v[0]) ) )
+  ;      point_lun, getDataLun, ( (*(self.lasHeader)).dataOffset) + (long(self.lasDataStrSz) * long(v[0]))
+  ;      readu, getDataLun, tempData
+  ;      print, 'data once read: ', (tempData[0:10]).time
+  ;      data = self->lasPointFieldSelector(tempData, _ref_extra=ex, self.out)
+  ;      ;data = tempData
+  ;      print, 'data after self->lasPointFieldSelector: ', (data[0:10]).time
+
+  index = Lindgen(numbElements) + v[0]
+
+  if ptr_valid(self.lasdata) eq 0 then tempData = self->getData(/all)
+  dum = (*(self.lasdata))[v]
+  ;print, dum
+  data = self->lasPointFieldSelector(dum)
+
+  self.Out->print,1, Strcompress("Number of point record(s) returned: "+String(numbElements))
+  self.Out->print,1, Strcompress("Time :"+String(Systime(1) - T) +' Seconds')
+
+endif
+
+; pointNumber parameter set to an index array [index_array] -> returning the points corresponding to the index
+if N_elements(v) gt 2 then begin
+
+  numbElements = N_elements(v)
+
+  ;###################################################################
+  ; Have been commented for testing - To be remove
+  ;     for n=0,numbElements-1,1 do begin
+  ;    n = 0L
+  ;    while n lt numbElements do begin
+  ;
+  ;      if n eq 0 then begin
+  ;
+  ;        tempDataStr = *(self).lasDataStr ;replicate(*(self).lasDataStr, numbElements)
+  ;        point_lun, getDataLun, ( (*(self.lasHeader)).dataOffset + (long(v[n]) * long(self.lasDataStrSz)) )
+  ;        readu, getDataLun, tempDataStr
+  ;        dum = tempDataStr
+  ;
+  ;      endif else begin
+  ;
+  ;        point_lun, getDataLun, ( (*(self.lasHeader)).dataOffset + (long(v[n]) * long(self.lasDataStrSz)) )
+  ;        readu, getDataLun, tempDataStr
+  ;        dum = [dum,tempDataStr]
+  ;
+  ;      endelse
+  ;    n+=1
+  ;    endwhile
+  ;;    endfor
+  ;###################################################################
+
+
+  ; Much more efficient way to retreive points via INDEX array
+  ;A = ASSOC(getDataLun, *(self).lasDataStr, (*(self.lasHeader)).dataOffset)
+  if ptr_valid(self.lasdata) eq 0 then tempData = self->getData(/all)
+  dum = (*(self.lasdata))[v]
+  ;print, dum
+
+  ;print, 'n elements: ', n_elements(dum)
+  data = self->lasPointFieldSelector(dum)
+;  data = dum
+  index = v
+
+  self.Out->print,1, Strcompress("Number of point record(s) returned: "+String(numbElements))
+  self.Out->print,1, Strcompress("Time :"+String(Systime(1) - T) +' Seconds')
+
+endif
+
+
+
+; keyword /all set -> returning all the points of the LAS file
+if Keyword_set(all) then begin
+
+  self.Out->print,1,"Formating data..."
+
+  ; Retriving the data packet
+  openr, getDataLun, self.lasFilePath, /get_lun, /swap_if_big_endian
+  tempDataStr = Replicate(*(self.Lasdatastr), (*(self.Lasheader)).Npoints)
+  Point_lun, getDataLun, (*self.Lasheader).Dataoffset
+  Readu, getDataLun, tempDataStr
+  free_lun, getDataLun
+  
+  ;data = self->lasPointFieldSelector(tempDataStr)
+  data=tempDataStr
+;print, data[0:1]
+  index = Lindgen((*(self.Lasheader)).Npoints)
+
+  if (Size(data))[2] ne 8 then $
+    self.Out->print,2,"Nothing return !" else $
+    self.Out->print,1,Strcompress("Number of point record(s) returned: " + String((*(self.Lasheader)).Npoints))
+
+  self.Out->print,1, Strcompress("Time :"+String(Systime(1) - T) +' Seconds')
+
+endif
+
 
 ; Updating the selection index table and the data structure array into object
-self.lasData = ptr_new(data)
+self.Lasdata = Ptr_new(data)
 ;print,index
-self.getDataIndex = ptr_new(index)
+self.Getdataindex = Ptr_new(index)
+;; Updating internal selection flag
+;; First clearing previous selection
+;dum = self.resetselectArray()
+;; Then update the matrix with selection
+;dum = self.updateSelectArray(index)
 
-free_lun, getDataLun, EXIT_STATUS=exVal, /FORCE
-return, data
+; Returning requested data
+;close, getDataLun, EXIT_STATUS=exVal, /FORCE
+
+;Free_lun, getDataLun, EXIT_STATUS=exVal, /FORCE
+Return, data
 
 
 End
+
+
+
+
 
 
 
