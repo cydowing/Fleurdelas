@@ -3679,7 +3679,7 @@ Openw, lasLun, output, /get_lun
   ; Open the corresponding file
   ; Read the file
   ; write the raw content into the new LAS file
-  self.Out->print, 100, "Writing Variable Length Records..."
+  self.Out->print, 1, "Writing Variable Length Records..."
   vlrFileID = self->getvlr(/vlrFileID)
   
   if vlrFileID ne !NULL then begin
@@ -4478,7 +4478,8 @@ end
 
 ;+
 ; 
-;-;+
+;-
+;+
 ; :Description:
 ;    This Function aim to modify the GeoKey record of the VLR record
 ;    Still in beta - WIP
