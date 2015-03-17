@@ -1,5 +1,5 @@
-Faisdodo
-========
+Faisdodo release
+================
 
 The fleurdelas class is an IDL implementation of a LAS file reader/writer. The class object can read, write and manipulate points and/or full waveforms contained in the binary LAS file format.
 It can handle any LAS 1.0, 1.1, 1.2, 1.3 and 1.4 with point format from 0 to 10.
