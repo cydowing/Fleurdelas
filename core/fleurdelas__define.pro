@@ -4445,14 +4445,14 @@ End
 ;   This Procedure write a LAS file. Still in beta.
 ;
 ; :Category:
-;   LAS, GENERAL
+; 	LAS, GENERAL
 ;
 ; :Return:
 ;   1 if the file is correclty write.
 ;   0 if error.
 ;
-; :Uses:
-;   Dum = fleurdelas::writeLAS()
+;	:Uses:
+;		Dum = fleurdelas::writeLAS()
 ;
 ; :Keywords:
 ;    id: in, optional, type=int
@@ -4740,13 +4740,13 @@ End
 ;    Additional columns can be added to the coordinates.
 ;
 ; :Category:
-;   LAS, GENERAL
+; 	LAS, GENERAL
 ;
 ; :Return:
-;   none
+; 	none
 ;
-; :Uses:
-;   Result = fleurdelas::dump(val, outputPath=outputPath)
+;	:Uses:
+;		Result = fleurdelas::dump(val, outputPath=outputPath)
 ;
 ; :Params:
 ;    val: in, optional, type=int,float,double
@@ -4759,9 +4759,9 @@ End
 ;     in the data folder of the project under fleurdelasDUMP.csv
 ;
 ; :History:
-;   JANUARY 2014: initial implementation
-;   SEPTEMBER 2014: 
-;    refining the implementation using self.getXYZ() and cleaning some lines so
+; 	JANUARY 2014: initial implementation
+; 	SEPTEMBER 2014: 
+; 	 refining the implementation using self.getXYZ() and cleaning some lines so
 ;
 ; :Author: antoine
 ;-
@@ -4821,20 +4821,20 @@ End
 ;    This function was develop for the fleurdelas::extractTrees() recursive function
 ;
 ; :Category:
-;   LAS, GENERAL
+; 	LAS, GENERAL
 ;
 ; :Return:
-;   none
+; 	none
 ;
-; :Uses:
-;   Dum = fleurdelas::updateSelectArray(index)
+;	:Uses:
+;		Dum = fleurdelas::updateSelectArray(index)
 ;
 ; :Params:
 ;    index: in, required, type=int
 ;     a scalar or array of int that represent an index number
 ;
 ; :History:
-;   JANUARY 2014: initial implementation
+; 	JANUARY 2014: initial implementation
 ;
 ; :Author: antoine
 ;-
@@ -4907,7 +4907,7 @@ End
 ; :Author:
 ;   Antoine Cottin
 ;-
-Function fleurDeLas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlrId ,vlrArr, obj
+Function fleurdelas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlrId ,vlrArr, obj
 
   ; Creating a binary file that will hold the VLR Records
   
