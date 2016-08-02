@@ -134,6 +134,9 @@ Function fleurdelas::init, INPUTFILE=INPUTFILE, _EXTRA=LOGMODE
 
   ; Adding the possibility to initialize the object without an input file
   if keyword_set(INPUTFILE) then begin
+
+    ; Save current directory   -Dick
+    CD, CURRENT=prevDir      ; -Dick  
     
     ; Setting up a temp directory to hold temporary informations
     ; cd into the project directory
@@ -154,11 +157,15 @@ Function fleurdelas::init, INPUTFILE=INPUTFILE, _EXTRA=LOGMODE
       Spawn, 'cd', rootPth
       self.Rootpath = rootPth
       ; Create a temp file
-      tempDirPath = rootPth + self.sysSep + 'temp'
+;      tempDirPath = rootPth + self.sysSep + 'temp' ; -Dick
+      tempDirPath = rootPth + PATH_SEP() + 'temp' ; -Dick
       self.Tempdirpath = tempDirPath
       command = 'mkdir '+ tempDirPath
       Spawn, command
     endelse
+    
+    ; Restore current directory   -Dick
+    CD, prevDir                 ; -Dick
     
     ;  CD, 'data/'
     dum = self.readLAS(INPUTFILE, header, dataStr)
@@ -244,7 +251,7 @@ End
 ;   GENERAL
 ;
 ; :Return:
-;   Binary value, 1 the new file with that extention exist, 0 that new file doesn't exist
+;   Binary value, 1 the new file with that extension exist, 0 that new file doesn't exist
 ;
 ; :Uses:
 ;   dum = Obj.lookingForFile(filebasename, ext)
@@ -256,7 +263,7 @@ End
 ;    basename : in, string, type = string
 ;     Represents the original path file name
 ;    ext : in, required, type = string
-;     file extention '.xxx' to add at the end of the name
+;     file extension '.xxx' to add at the end of the name
 ;    tileFileName: in, required, type=string
 ;     Represents the new file name
 ;
@@ -347,6 +354,9 @@ Pro fleurdelas::cleanup
 ;PRINT, 'mthreadlock : ', self.mthreadlock
 ;  if self.Mthreadlock eq 0B then begin
     
+  ; Save current directory   -Dick
+  CD, CURRENT=prevDir      ; -Dick
+  
   ; Removing the temporary files
   self.Out->print,1 , 'Destroying fleurdelas object...'
   self.Out->print,1 , 'Removing temporary files...'
@@ -392,6 +402,9 @@ Pro fleurdelas::cleanup
   self.Out->print,1 , 'Bye :)'
   Obj_destroy, self.Out
 
+  ; Restore current directory   -Dick
+  CD, prevDir                 ; -Dick
+  
 ;  endif
 End
 
@@ -1943,6 +1956,7 @@ Function fleurdelas::getSelectedDataByIndex, INDEX = INDEX, XYZ = XYZ
     self.Out->print,1,"Filtering data by index..."
 
     tempReturnNumber = (*(self.Lasdata))[INDEX]
+    indexCount = N_Elements(INDEX)
 
 
     if Keyword_set(FIRST) then begin
@@ -2382,8 +2396,15 @@ Function fleurdelas::getWave, all=all, loadedPoints=loadedPoints, electric=elect
     check = globalEncodingReader(*(self.Lasheader))
 
     if check[1] eq 1 then Openr, inputLun, self.Lasfilepath, /get_lun, /swap_if_big_endian else begin
-      ; strip down the name add the extention .wdp and open the file
-      waveName = addnameextention(self.Lasfilepath, ORIGINAL_EXTENTION = ORIGINAL_EXTENTION, NEW_EXTENTION = '.wdp')
+      ; strip down the name add the extension .wdp and open the file
+      
+      ;-Dick:
+      ; waveName = addnameextention(self.Lasfilepath, ORIGINAL_EXTENTION = ORIGINAL_EXTENTION, NEW_EXTENTION = '.wdp')
+      dotPos = StrPos(self.Lasfilepath, '.', /REVERSE_SEARCH)
+      strLenToUse = dotPos EQ -1 ? StrLen(self.Lasfilepath) : dotPos
+      waveName = StrMid(self.Lasfilepath, 0, strLenToUse) + '.wdp'
+      ;-Dick.
+
       Openr, inputLun, waveName, /get_lun, /swap_if_big_endian
     endelse
 
@@ -2705,6 +2726,8 @@ End
 Function fleurdelas::getSelectedDataByBoundingBox, $
                                 BOUNDINGBOX = BBOX
                                 
+; start time
+T = Systime(1)
 
 tempData = self.getXYZ()
 
@@ -2761,7 +2784,7 @@ End
 ;
 ; :Keywords:
 ;   header : in, optional, type=boolean
-;     If set, will return the complet header structure.
+;     If set, will return the complete header structure.
 ;     The result will be a structure of header type
 ;   signature : in, optional, type=boolean
 ;     If set, will return the FILE SIGNATURE field.
@@ -2906,7 +2929,166 @@ Function fleurdelas::getHeaderProperty,$
   if Keyword_set(boundingBox) then Return, [(*(self.Lasheader)).Xmax,(*(self.Lasheader)).Xmin,(*(self.Lasheader)).Ymax,(*(self.Lasheader)).Ymin,(*(self.Lasheader)).Zmax,(*(self.Lasheader)).Zmin]
   if Keyword_set(plotBoundingBox) then Return, [(*(self.Lasheader)).Ymin, (*(self.Lasheader)).Xmin, (*(self.Lasheader)).Ymax,(*(self.Lasheader)).Xmax]
 
-End
+End ; FUNCTION fleurdelas::getHeaderProperty
+
+;-Dick:
+;+
+; This procedure gets specific fields of the LAS header, any number at once.
+;
+; :Categories:
+;   LAS, GET
+;
+; :Uses:
+;   Obj->getHeaderProperty, keyword1=var1 [, keyword2=var2 [...]]
+;
+; :Keywords:
+;   header : out, optional
+;     If named variable provided, it will receive the complete header structure.
+;     The result will be a structure of header type
+;   signature : out, optional
+;     If named variable provided, it will receive the FILE SIGNATURE field.
+;     The result will be a `bytarr(4)`.
+;   versionmajor : out, optional
+;     If named variable provided, it will receive the VERSION MAJOR field.
+;     The result will be a `0B`.
+;   versionminor : out, optional
+;     If named variable provided, it will receive the VERSION MINOR field.
+;     The result will be a `0B`.
+;   systemid : out, optional
+;     If named variable provided, it will receive the VERSION SYSTEM IDENTIFIER field.
+;     The result will be a `bytarr(32)`.
+;   softwareid : out, optional
+;     If named variable provided, it will receive the GENERATING SOFTWARE field.
+;     The result will be a `bytarr(32)`.
+;   surveyday : out, optional
+;     If named variable provided, it will receive the FILE CREATION DAY OF YEAR field.
+;     The result will be a `0US`.
+;   surveyyear : out, optional
+;     If named variable provided, it will receive the FILE CREATION YEAR field.
+;     The result will be a `0US`.
+;   sizeofheader : out, optional
+;     If named variable provided, it will receive the HEADER SIZE field.
+;     The result will be a `0US`.
+;   dataoffset : out, optional
+;     If named variable provided, it will receive the OFFSET TO POINT DATA field.
+;     The result will be a `0UL`.
+;   numberofvlr : out, optional
+;     If named variable provided, it will receive the NUMBER OF VARIABLE LENGTH RECORDS field.
+;     The result will be a `0UL`.
+;   pointformat : out, optional
+;     If named variable provided, it will receive the POINT DATA FORMAT ID field.
+;     The result will be a `0B`.
+;   pointlength : out, optional
+;     If named variable provided, it will receive the POINT DATA RECORD LENGTH field.
+;     The result will be a `0US`.
+;   numberofpoints : out, optional
+;     If named variable provided, it will receive the NUMBER OF POINT RECORDS field.
+;     The result will be a `0UL`.
+;   numberofreturns : out, optional
+;     If named variable provided, it will receive the NUMBER OF POINTS BY RETURN field.
+;     The result will be a `0B`.
+;   xscale : out, optional
+;     If named variable provided, it will receive the X SCALE FACTOR field.
+;     The result will be a `0D`.
+;   yscale : out, optional
+;     If named variable provided, it will receive the Y SCALE FACTOR field.
+;     The result will be a `0D`.
+;   zscale : out, optional
+;     If named variable provided, it will receive the Z SCALE FACTOR field.
+;     The result will be a `0D`.
+;   xoffset : out, optional
+;     If named variable provided, it will receive the X OFFSET field.
+;     The result will be a `0D`.
+;   yoffset : out, optional
+;     If named variable provided, it will receive the Y OFFSET field.
+;     The result will be a `0D`.
+;   zoffset : out, optional
+;     If named variable provided, it will receive the Z OFFSET field.
+;     The result will be a `0D`.
+;   xmax : out, optional
+;     If named variable provided, it will receive the MAX X field.
+;     The result will be a `0D`.
+;   xmin : out, optional
+;     If named variable provided, it will receive the MIN X field.
+;     The result will be a `0D`.
+;   ymax : out, optional
+;     If named variable provided, it will receive the MAX Y field.
+;     The result will be a `0D`.
+;   ymin : out, optional
+;     If named variable provided, it will receive the MIN Y field.
+;     The result will be a `0D`.
+;   zmax : out, optional
+;     If named variable provided, it will receive the MAX Z field.
+;     The result will be a `0D`.
+;   zmin : out, optional
+;     If named variable provided, it will receive the MIN Z field.
+;     The result will be a `0D`.
+;   boundingbox : out, optional
+;     If named variable provided, it will receive the bounding box of the LAS file.
+;     The result will be a `dblarr(4)` of [XMAX,XMIN,YMAX,YMIN,ZMAX,ZMIN].
+;-
+PRO fleurdelas::getHeaderProperty,$
+  header=header,$
+  signature=signature,$
+  versionMajor=versionMajor,$
+  versionMinor=versionMinor,$
+  systemID=systemId,$
+  softwareID=softwareID,$
+  surveyDay=surveyDay,$
+  surveyYear=surveyYear,$
+  sizeOfHeader=headerSize,$
+  dataOffset=dataOffset,$
+  numberOfVLR=numberOfVLR,$
+  pointFormat=pointFormat,$
+  pointLength=pointLength,$
+  numberOfPoints=numberOfPoints,$
+  numberOfReturns=numberOfReturns,$
+  xScale=xScale,$
+  yScale=yScale,$
+  zScale=zScale,$
+  xOffset=xOffset,$
+  yOffset=yOffset,$
+  zOffset=zOffset,$
+  xMax=xMax,$
+  xMin=xMin,$
+  yMax=yMax,$
+  yMin=yMin,$
+  zMax=zMax,$
+  zMin=zMin,$
+  boundingBox=boundingBox,$
+  plotBoundingBox=plotBoundingBox
+
+  if Arg_Present(header) then header = (*(self.Lasheader))
+  if Arg_Present(signature) then signature = (*(self.Lasheader)).Signature
+  if Arg_Present(versionMajor) then versionMajor = (*(self.Lasheader)).Versionmajor
+  if Arg_Present(versionMinor) then versionMinor (*(self.Lasheader)).Versionminor
+  if Arg_Present(systemID) then systemID = (*(self.Lasheader)).Systemid
+  if Arg_Present(softwareID) then softwareID = (*(self.Lasheader)).Softwareid
+  if Arg_Present(surveyDay) then surveyDay = (*(self.Lasheader)).Day
+  if Arg_Present(surveyYear) then surveyYear = (*(self.Lasheader)).Year
+  if Arg_Present(sizeOfHeader) then sizeOfHeader = (*(self.Lasheader)).Headersize
+  if Arg_Present(dataOffset) then dataOffset = (*(self.Lasheader)).Dataoffset
+  if Arg_Present(numberOfVLR) then numberOfVLR = (*(self.Lasheader)).Nrecords
+  if Arg_Present(pointFormat) then pointFormat = (*(self.Lasheader)).Pointformat
+  if Arg_Present(pointLength) then pointLength = (*(self.Lasheader)).Pointlength
+  if Arg_Present(numberOfPoints) then numberOfPoints = (*(self.Lasheader)).Npoints
+  if Arg_Present(numberOfReturns) then numberOfReturns = (*(self.Lasheader)).Nreturns
+  if Arg_Present(xScale) then xScale = (*(self.Lasheader)).Xscale
+  if Arg_Present(yScale) then yScale = (*(self.Lasheader)).Yscale
+  if Arg_Present(zScale) then zScale = (*(self.Lasheader)).Zscale
+  if Arg_Present(xOffset) then xOffset = (*(self.Lasheader)).Xoffset
+  if Arg_Present(yOffset) then yOffset = (*(self.Lasheader)).Yoffset
+  if Arg_Present(zOffset) then zOffset = (*(self.Lasheader)).Zoffset
+  if Arg_Present(xMax) then xMax = (*(self.Lasheader)).Xmax
+  if Arg_Present(xMin) then xMin = (*(self.Lasheader)).Xmin
+  if Arg_Present(yMax) then yMax = (*(self.Lasheader)).Ymax
+  if Arg_Present(yMin) then yMin = (*(self.Lasheader)).Ymin
+  if Arg_Present(zMax) then zMax = (*(self.Lasheader)).Zmax
+  if Arg_Present(zMin) then zMin = (*(self.Lasheader)).Zmin
+  if Arg_Present(boundingBox) then boundingBox = [(*(self.Lasheader)).Xmax,(*(self.Lasheader)).Xmin,(*(self.Lasheader)).Ymax,(*(self.Lasheader)).Ymin,(*(self.Lasheader)).Zmax,(*(self.Lasheader)).Zmin]
+  if Arg_Present(plotBoundingBox) then plotBoundingBox = [(*(self.Lasheader)).Ymin, (*(self.Lasheader)).Xmin, (*(self.Lasheader)).Ymax,(*(self.Lasheader)).Xmax]
+
+End ; PRO fleurdelas::getHeaderProperty
 
 
 
@@ -3415,7 +3597,7 @@ Function fleurdelas::waveFromPacketOffset, waveOffset = waveOffset
 
     if check[1] eq 1 then Openr, inputLun, self.Lasfilepath, /get_lun, /swap_if_big_endian ;else begin
 
-    ; strip down the name add the extention .wdp and open the file
+    ; strip down the name add the extension .wdp and open the file
 
   endelse
 
@@ -4445,14 +4627,14 @@ End
 ;   This Procedure write a LAS file. Still in beta.
 ;
 ; :Category:
-; 	LAS, GENERAL
+;  LAS, GENERAL
 ;
 ; :Return:
 ;   1 if the file is correclty write.
 ;   0 if error.
 ;
-;	:Uses:
-;		Dum = fleurdelas::writeLAS()
+;  :Uses:
+;     Dum = fleurdelas::writeLAS()
 ;
 ; :Keywords:
 ;    id: in, optional, type=int
@@ -4740,13 +4922,13 @@ End
 ;    Additional columns can be added to the coordinates.
 ;
 ; :Category:
-; 	LAS, GENERAL
+;  LAS, GENERAL
 ;
 ; :Return:
-; 	none
+;  none
 ;
-;	:Uses:
-;		Result = fleurdelas::dump(val, outputPath=outputPath)
+;  :Uses:
+;     Result = fleurdelas::dump(val, outputPath=outputPath)
 ;
 ; :Params:
 ;    val: in, optional, type=int,float,double
@@ -4759,9 +4941,9 @@ End
 ;     in the data folder of the project under fleurdelasDUMP.csv
 ;
 ; :History:
-; 	JANUARY 2014: initial implementation
-; 	SEPTEMBER 2014: 
-; 	 refining the implementation using self.getXYZ() and cleaning some lines so
+;  JANUARY 2014: initial implementation
+;  SEPTEMBER 2014: 
+;   refining the implementation using self.getXYZ() and cleaning some lines so
 ;
 ; :Author: antoine
 ;-
@@ -4821,20 +5003,20 @@ End
 ;    This function was develop for the fleurdelas::extractTrees() recursive function
 ;
 ; :Category:
-; 	LAS, GENERAL
+;  LAS, GENERAL
 ;
 ; :Return:
-; 	none
+;  none
 ;
-;	:Uses:
-;		Dum = fleurdelas::updateSelectArray(index)
+;  :Uses:
+;     Dum = fleurdelas::updateSelectArray(index)
 ;
 ; :Params:
 ;    index: in, required, type=int
 ;     a scalar or array of int that represent an index number
 ;
 ; :History:
-; 	JANUARY 2014: initial implementation
+;  JANUARY 2014: initial implementation
 ;
 ; :Author: antoine
 ;-
@@ -4914,7 +5096,8 @@ Function fleurdelas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
 
   ; Creating a temp file that hold ALL the VLR records
   ; XXX: will need to be changed we integrated to fleurDeLas using self.tempDirPath
-  vlrFilePath = self.tempDirPath + self.sysSep + 'vlrRecords.bin'
+;  vlrFilePath = self.tempDirPath + self.sysSep + 'vlrRecords.bin' ; -Dick
+  vlrFilePath = self.tempDirPath + PATH_SEP() + 'vlrRecords.bin' ; -Dick
   openw, wLun, vlrFilePath, /GET_LUN
 
 
@@ -4941,7 +5124,8 @@ Function fleurdelas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
 
     for w=0,header.nRecords-1,1 do begin
 
-      outputFile = strcompress(self.tempDirPath + self.sysSep + 'vlr_0' + string(w) + '.gkey',/REMOVE_ALL)
+;      outputFile = strcompress(self.tempDirPath + self.sysSep + 'vlr_0' + string(w) + '.gkey',/REMOVE_ALL) ; -Dick
+      outputFile = strcompress(self.tempDirPath + PATH_SEP() + 'vlr_0' + string(w) + '.gkey',/REMOVE_ALL) ; -Dick
       vlrFileArr[w] = outputFile
 
       readu, rLun, vrlStruct
@@ -5638,8 +5822,8 @@ Pro fleurdelas__define
     surveyDay         : '',$                    ; String holding the Julian Survey day - only with ARSF-NERC dataset
     tempDirPath       : '',$                    ; String holdinf the temporary directory path to store temp file(s) if required
     rootPath          : '',$                    ; Path of the directory where the project is located
-    waveFileExt       : '',$                    ; Extention of the external waveform file, WPD | INW
-    sysSep            : '',$
+    waveFileExt       : '',$                    ; Extension of the external waveform file, WPD | INW
+;    sysSep            : '',$ ; -Dick
     lasHeader         : Ptr_new(/ALLOCATE_HEAP),$             ; Pointer to the header of the LAS file
     lasDataStr        : Ptr_new(/ALLOCATE_HEAP),$             ; Pointer to the Point data structure
     lasDataStrSz      : 0B,$                    ; Size in bytes of the point data structure
