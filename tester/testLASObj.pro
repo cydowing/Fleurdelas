@@ -20,9 +20,6 @@
 ;-
 Pro testLASObj
 
-; Initialization of the fleurdelas object 
-lasobj = obj_new('fleurdelas')
-
 ; Loading the data from the MiltonKeynes.las file
 ; The input file can be a relative path to the IDL root path, or a fully qualified path
 rootPath = File_dirname(Routine_filepath('fleurdelas__define', /either))
@@ -33,7 +30,8 @@ if strlowcase(!version.os_family) eq 'unix' then Spawn, 'pwd', rootPth else Spaw
 
 inputFile = FILEPATH('MiltonKeynes.las', ROOT_DIR = rootPth, SUBDIRECTORY=['data'])
 
-lasobj.loadDataWithPath, inputFile = inputFile
+; Initialization of the fleurdelas object 
+lasobj = fleurdelastools(inputfile = inputFile)
 
 ; Get all the points that have been loaded into memory - for further manipulations
 ; Dum is an array of structure (of LAS point)
