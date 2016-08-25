@@ -135,8 +135,8 @@ Function fleurdelas::init, INPUTFILE=INPUTFILE, _EXTRA=LOGMODE
   ; Adding the possibility to initialize the object without an input file
   if keyword_set(INPUTFILE) then begin
 
-    ; Save current directory   -Dick
-    CD, CURRENT=prevDir      ; -Dick  
+    ; Save current directory
+    CD, CURRENT=prevDir
     
     ; Setting up a temp directory to hold temporary informations
     ; cd into the project directory
@@ -157,15 +157,14 @@ Function fleurdelas::init, INPUTFILE=INPUTFILE, _EXTRA=LOGMODE
       Spawn, 'cd', rootPth
       self.Rootpath = rootPth
       ; Create a temp file
-;      tempDirPath = rootPth + self.sysSep + 'temp' ; -Dick
-      tempDirPath = rootPth + PATH_SEP() + 'temp' ; -Dick
+      tempDirPath = rootPth + PATH_SEP() + 'temp'
       self.Tempdirpath = tempDirPath
       command = 'mkdir '+ tempDirPath
       Spawn, command
     endelse
     
-    ; Restore current directory   -Dick
-    CD, prevDir                 ; -Dick
+    ; Restore current directory
+    CD, prevDir
     
     ;  CD, 'data/'
     dum = self.readLAS(INPUTFILE, header, dataStr)
@@ -354,8 +353,8 @@ Pro fleurdelas::cleanup
 ;PRINT, 'mthreadlock : ', self.mthreadlock
 ;  if self.Mthreadlock eq 0B then begin
     
-  ; Save current directory   -Dick
-  CD, CURRENT=prevDir      ; -Dick
+  ; Save current directory
+  CD, CURRENT=prevDir
   
   ; Removing the temporary files
   self.Out->print,1 , 'Destroying fleurdelas object...'
@@ -402,8 +401,8 @@ Pro fleurdelas::cleanup
   self.Out->print,1 , 'Bye :)'
   Obj_destroy, self.Out
 
-  ; Restore current directory   -Dick
-  CD, prevDir                 ; -Dick
+  ; Restore current directory
+  CD, prevDir
   
 ;  endif
 End
@@ -2398,12 +2397,9 @@ Function fleurdelas::getWave, all=all, loadedPoints=loadedPoints, electric=elect
     if check[1] eq 1 then Openr, inputLun, self.Lasfilepath, /get_lun, /swap_if_big_endian else begin
       ; strip down the name add the extension .wdp and open the file
       
-      ;-Dick:
-      ; waveName = addnameextention(self.Lasfilepath, ORIGINAL_EXTENTION = ORIGINAL_EXTENTION, NEW_EXTENTION = '.wdp')
       dotPos = StrPos(self.Lasfilepath, '.', /REVERSE_SEARCH)
       strLenToUse = dotPos EQ -1 ? StrLen(self.Lasfilepath) : dotPos
       waveName = StrMid(self.Lasfilepath, 0, strLenToUse) + '.wdp'
-      ;-Dick.
 
       Openr, inputLun, waveName, /get_lun, /swap_if_big_endian
     endelse
@@ -2931,7 +2927,6 @@ Function fleurdelas::getHeaderProperty,$
 
 End ; FUNCTION fleurdelas::getHeaderProperty
 
-;-Dick:
 ;+
 ; This procedure gets specific fields of the LAS header, any number at once.
 ;
@@ -5096,8 +5091,7 @@ Function fleurdelas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
 
   ; Creating a temp file that hold ALL the VLR records
   ; XXX: will need to be changed we integrated to fleurDeLas using self.tempDirPath
-;  vlrFilePath = self.tempDirPath + self.sysSep + 'vlrRecords.bin' ; -Dick
-  vlrFilePath = self.tempDirPath + PATH_SEP() + 'vlrRecords.bin' ; -Dick
+  vlrFilePath = self.tempDirPath + PATH_SEP() + 'vlrRecords.bin'
   openw, wLun, vlrFilePath, /GET_LUN
 
 
@@ -5124,8 +5118,7 @@ Function fleurdelas::readVLR, inputFile, header, vlrFileArr, vlrByteSizeArr, vlr
 
     for w=0,header.nRecords-1,1 do begin
 
-;      outputFile = strcompress(self.tempDirPath + self.sysSep + 'vlr_0' + string(w) + '.gkey',/REMOVE_ALL) ; -Dick
-      outputFile = strcompress(self.tempDirPath + PATH_SEP() + 'vlr_0' + string(w) + '.gkey',/REMOVE_ALL) ; -Dick
+      outputFile = strcompress(self.tempDirPath + PATH_SEP() + 'vlr_0' + string(w) + '.gkey',/REMOVE_ALL)
       vlrFileArr[w] = outputFile
 
       readu, rLun, vrlStruct
@@ -5823,7 +5816,6 @@ Pro fleurdelas__define
     tempDirPath       : '',$                    ; String holdinf the temporary directory path to store temp file(s) if required
     rootPath          : '',$                    ; Path of the directory where the project is located
     waveFileExt       : '',$                    ; Extension of the external waveform file, WPD | INW
-;    sysSep            : '',$ ; -Dick
     lasHeader         : Ptr_new(/ALLOCATE_HEAP),$             ; Pointer to the header of the LAS file
     lasDataStr        : Ptr_new(/ALLOCATE_HEAP),$             ; Pointer to the Point data structure
     lasDataStrSz      : 0B,$                    ; Size in bytes of the point data structure
