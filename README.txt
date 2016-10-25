@@ -22,7 +22,7 @@ As it is an open project, we would like to see you involved, so please don't hes
 
 If you’re wondering about the name of the release; it celebrates a Cajun dance party  :: the Faisdodo.
 
-If you want to find out more about Carbomap then you can visit our website [http://www.carbomap.com] or our blog [http://carbomap.wordpress.com].
+If you want to find out more about Carbomap then you can visit our website [http://www.carbomap.com].
 
 Enjoy.
 Cheers.
