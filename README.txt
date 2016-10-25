@@ -30,10 +30,5 @@ Antoine
 -----------------------
 Created 10/09/2014 by Antoine Cottin
 Carbomap Ltd.
-7th Floor, Appleton Tower
-11 Crichton Street
-Edinburgh
-EH8 9LE
 http://www.carbomap.com
-http://carbomap.wordpress.com
 http://github.com/carbomap
